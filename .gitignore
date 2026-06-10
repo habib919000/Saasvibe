@@ -1,0 +1,20 @@
+# Dependency directories
+node_modules/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# IDE & Tooling folders
+.claude/
+.gemini/
+.vscode/
+.idea/
+
+# Build artifacts
+dist/
+views/assets/dist/
+
+# WordPress environment configurations if any
+wp-cli.local.yml
+.wp-env.json

@@ -1,0 +1,36 @@
+{
+  "name": "wp-admin-nav-designer",
+  "version": "2.0.0",
+  "description": "WordPress Admin Backend Navigation Transformation Plugin Settings App",
+  "main": "views/assets/src/index.jsx",
+  "scripts": {
+    "start": "wp-scripts start",
+    "build": "wp-scripts build",
+    "lint": "wp-scripts lint-js",
+    "makepot": "wp-scripts makepot"
+  },
+  "keywords": [
+    "wordpress",
+    "admin",
+    "theme",
+    "menu",
+    "navigation"
+  ],
+  "author": "SaaS Menu Team",
+  "license": "GPL-2.0-or-later",
+  "devDependencies": {
+    "@babel/preset-react": "^7.24.1",
+    "@wordpress/scripts": "^27.0.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "postcss-loader": "^8.1.1",
+    "tailwindcss": "^3.4.3"
+  },
+  "dependencies": {
+    "@tailwindcss/forms": "^0.5.7",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.400.0",
+    "sonner": "^1.7.0",
+    "tailwind-merge": "^2.3.0"
+  }
+}
