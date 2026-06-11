@@ -24,7 +24,6 @@ class Template_Controller {
                     'accent'     => '#5E6AD2',
                     'hover'      => '#1E1E24',
                 ],
-                'thumbnailUrl'  => SAASMENU_URL . 'assets/images/linear-dark.png',
             ],
             [
                 'id'            => 'vercel-minimal',
@@ -38,7 +37,6 @@ class Template_Controller {
                     'accent'     => '#000000',
                     'hover'      => '#F3F4F6',
                 ],
-                'thumbnailUrl'  => SAASMENU_URL . 'assets/images/vercel-minimal.png',
             ],
             [
                 'id'            => 'classic-elevated',
@@ -52,7 +50,6 @@ class Template_Controller {
                     'accent'     => '#2271B1',
                     'hover'      => '#1B5B8E',
                 ],
-                'thumbnailUrl'  => SAASMENU_URL . 'assets/images/classic-elevated.png',
             ],
             [
                 'id'            => 'stripe-crisp',
@@ -66,7 +63,6 @@ class Template_Controller {
                     'accent'     => '#6772E5',
                     'hover'      => '#F6F9FC',
                 ],
-                'thumbnailUrl'  => SAASMENU_URL . 'assets/images/stripe-crisp.png',
             ],
             [
                 'id'            => 'notion-panel',
@@ -80,7 +76,6 @@ class Template_Controller {
                     'accent'     => '#2EAADC',
                     'hover'      => '#EFEFED',
                 ],
-                'thumbnailUrl'  => SAASMENU_URL . 'assets/images/notion-panel.png',
             ],
             [
                 'id'            => 'github-dark',
@@ -94,7 +89,6 @@ class Template_Controller {
                     'accent'     => '#238636',
                     'hover'      => '#161B22',
                 ],
-                'thumbnailUrl'  => SAASMENU_URL . 'assets/images/github-dark.png',
             ],
             [
                 'id'            => 'figma-light',
@@ -108,7 +102,6 @@ class Template_Controller {
                     'accent'     => '#18A0FB',
                     'hover'      => '#F5F5F5',
                 ],
-                'thumbnailUrl'  => SAASMENU_URL . 'assets/images/figma-light.png',
             ],
             [
                 'id'            => 'loom-bold',
@@ -122,7 +115,6 @@ class Template_Controller {
                     'accent'     => '#FF6B6B',
                     'hover'      => '#694E91',
                 ],
-                'thumbnailUrl'  => SAASMENU_URL . 'assets/images/loom-bold.png',
             ],
             [
                 'id'            => 'shopify-polaris',
@@ -136,7 +128,6 @@ class Template_Controller {
                     'accent'     => '#5C5F62',
                     'hover'      => '#006E52',
                 ],
-                'thumbnailUrl'  => SAASMENU_URL . 'assets/images/shopify-polaris.png',
             ],
             [
                 'id'            => 'framer-glass',
@@ -150,7 +141,6 @@ class Template_Controller {
                     'accent'     => '#0055FF',
                     'hover'      => '#EAEAEA',
                 ],
-                'thumbnailUrl'  => SAASMENU_URL . 'assets/images/framer-glass.png',
             ],
         ];
     }
@@ -209,7 +199,6 @@ class Template_Controller {
         $sanitized_settings = [
             'templateId'       => $template_id,
             'brandColor'       => isset( $params['brandColor'] ) ? sanitize_hex_color( $params['brandColor'] ) : '#5E6AD2',
-            'darkMode'         => isset( $params['darkMode'] ) ? (bool) $params['darkMode'] : true,
             'density'          => isset( $params['density'] ) ? sanitize_text_field( $params['density'] ) : 'normal',
             'customLogo'       => isset( $params['customLogo'] ) ? esc_url_raw( $params['customLogo'] ) : '',
             'topBarHeight'     => isset( $params['topBarHeight'] ) ? min( 52, max( 32, intval( $params['topBarHeight'] ) ) ) : 46,

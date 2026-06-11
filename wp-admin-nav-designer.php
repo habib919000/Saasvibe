@@ -49,7 +49,6 @@ function saasmenu_activate_plugin() {
     $default_settings = [
         'templateId'         => 'linear-dark',
         'brandColor'         => '#5E6AD2',
-        'darkMode'           => true,
         'density'            => 'normal',
         'customLogo'         => '',
         'topBarHeight'       => 46,

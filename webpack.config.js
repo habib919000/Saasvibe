@@ -25,7 +25,6 @@ module.exports = {
             '@': path.resolve( __dirname, 'views/assets/src' ),
             '@components': path.resolve( __dirname, 'views/assets/src/components' ),
             '@hooks': path.resolve( __dirname, 'views/assets/src/hooks' ),
-            '@lib': path.resolve( __dirname, 'views/assets/src/lib' ),
         },
         extensions: [ '.js', '.jsx', '.json' ],
     },

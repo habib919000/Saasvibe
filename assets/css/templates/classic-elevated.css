@@ -85,7 +85,6 @@ html.wp-toolbar {
     color: rgba(255, 255, 255, 0.85) !important;
     font-weight: 500 !important;
     border-radius: 6px !important;
-    margin: 2px 8px !important;
     padding: var(--saasmenu-menu-item-padding, 8px 12px) !important;
     transition: all 150ms ease-in-out !important;
 }
