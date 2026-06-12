@@ -1,5 +1,5 @@
 {
-  "name": "wp-admin-nav-designer",
+  "name": "saasvibe",
   "version": "2.0.0",
   "description": "WordPress Admin Backend Navigation Transformation Plugin Settings App",
   "main": "views/assets/src/index.jsx",

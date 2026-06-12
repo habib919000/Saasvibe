@@ -1,20 +1,52 @@
-# Dependency directories
+# Node / build tooling (dev only, not shipped to WP.org)
 node_modules/
+package-lock.json
 
-# OS metadata
+# Build config (dev only)
+webpack.config.js
+postcss.config.js
+tailwind.config.js
+
+# React source (only compiled dist is shipped)
+views/assets/src/
+
+# Dependencies
+composer.lock
+vendor/
+
+# Build artifacts / logs
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
 Thumbs.db
 
-# IDE & Tooling folders
+# Backups / temp
+.backup-*/
+*.backup
+*.bak
+~*
 .claude/
-.gemini/
-.vscode/
-.idea/
 
-# Build artifacts
-dist/
-views/assets/dist/
+# Test output
+coverage/
+.nyc_output/
 
-# WordPress environment configurations if any
-wp-cli.local.yml
-.wp-env.json
+# Cache
+.cache/
+*.cache
+
+# Zip releases
+*.zip

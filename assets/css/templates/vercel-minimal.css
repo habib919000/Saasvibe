@@ -41,9 +41,33 @@ html.wp-toolbar {
 }
 
 /* 2. Top Bar (#wpadminbar) Styling */
-#wpadminbar * {
+#wpadminbar *:not(.ab-icon):not(.dashicons):not(.dashicons-before):not(.dashicons-before::before) {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     color: #111111 !important;
+}
+
+#wpadminbar .ab-icon,
+#wpadminbar .ab-icon::before,
+#wpadminbar .dashicons,
+#wpadminbar .dashicons::before,
+#wpadminbar .dashicons-before,
+#wpadminbar .dashicons-before::before {
+    font-family: 'dashicons' !important;
+    color: #4B5563 !important; /* High-contrast gray for light top bar */
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: color 120ms ease !important;
+}
+
+#wpadminbar .ab-item:hover,
+#wpadminbar .ab-item:hover .ab-icon,
+#wpadminbar .ab-item:hover .ab-icon::before,
+#wpadminbar .ab-item:hover .dashicons,
+#wpadminbar .ab-item:hover .dashicons::before,
+#wpadminbar .ab-item:hover .dashicons-before,
+#wpadminbar .ab-item:hover .dashicons-before::before {
+    color: var(--saasmenu-brand-color, #000000) !important;
 }
 
 #wpadminbar .ab-item,
@@ -134,17 +158,19 @@ html.wp-toolbar {
 
 /* Icons styling */
 #adminmenu .wp-menu-image img {
-    opacity: 0.6 !important;
-    transition: opacity 120ms ease !important;
+    opacity: 0.8 !important;
+    filter: brightness(0.3) !important; /* Darken light custom icons on white bg */
+    transition: all 120ms ease !important;
 }
 
 #adminmenu li:hover .wp-menu-image img,
 #adminmenu li.wp-has-current-submenu .wp-menu-image img {
     opacity: 1 !important;
+    filter: none !important; /* Restore full brand color on hover */
 }
 
 #adminmenu div.wp-menu-image::before {
-    color: #777777 !important;
+    color: #4B5563 !important; /* High-contrast gray */
     transition: color 120ms ease !important;
 }
 
@@ -181,4 +207,19 @@ html.wp-toolbar {
 
 .folded .saasmenu-sidebar-logo-container img {
     max-height: 24px !important;
+}
+
+/* 4. Accessibility & Focus Highlights */
+#adminmenu a.menu-top:focus-visible,
+#adminmenu .wp-submenu a:focus-visible,
+#collapse-button:focus-visible {
+    outline: 2px solid var(--saasmenu-brand-color, #000000) !important;
+    outline-offset: -2px !important;
+    background-color: var(--saasmenu-brand-hover-color, rgba(0, 0, 0, 0.05)) !important;
+}
+
+#wpadminbar .ab-item:focus-visible,
+#wpadminbar a:focus-visible {
+    outline: 2px solid var(--saasmenu-brand-color, #000000) !important;
+    outline-offset: -2px !important;
 }

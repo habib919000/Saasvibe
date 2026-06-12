@@ -1,14 +1,16 @@
 <?php
 /**
- * Plugin Name:       WP Admin Nav Designer
- * Plugin URI:        https://example.com/wp-admin-nav-designer
- * Description:       Transform your WordPress backend with modern, SaaS-inspired layouts and custom branding.
- * Version:           2.0.0
- * Author:            SaaS Menu Team
- * Author URI:        https://example.com
- * License:           GPLv2 or later
- * Text Domain:       saasmenu
- * Domain Path:       /languages
+ * Plugin Name:       Saasvibe
+ * Plugin URI:        https://github.com/habib919000/saasvibe
+ * Description:       Transform your WordPress dashboard with beautiful design templates, brand customization, and role-based access control. Enterprise-grade security with WCAG accessibility.
+ * Version:           1.0.0
+ * Requires at least: 5.8
+ * Requires PHP:      7.4
+ * Author:            WeDevs Info
+ * Author URI:        https://wedevsinfo.com
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       saasvibe
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -16,17 +18,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'SAASMENU_VERSION', '2.0.0' );
-define( 'SAASMENU_FILE', __FILE__ );
-define( 'SAASMENU_PATH', plugin_dir_path( __FILE__ ) );
-define( 'SAASMENU_URL', plugin_dir_url( __FILE__ ) );
+define( 'SAASVIBE_VERSION', '1.0.0' );
+define( 'SAASVIBE_FILE', __FILE__ );
+define( 'SAASVIBE_PATH', plugin_dir_path( __FILE__ ) );
+define( 'SAASVIBE_URL', plugin_dir_url( __FILE__ ) );
 
 /**
  * Register PSR-4 Autoloader
  */
 spl_autoload_register( function( $class ) {
-    $prefix = 'SaasMenu\\';
-    $base_dir = SAASMENU_PATH . 'src/';
+    $prefix = 'Saasvibe\\';
+    $base_dir = SAASVIBE_PATH . 'src/';
 
     $len = strlen( $prefix );
     if ( strncmp( $prefix, $class, $len ) !== 0 ) {
@@ -44,7 +46,7 @@ spl_autoload_register( function( $class ) {
 /**
  * Handle Plugin Activation
  */
-function saasmenu_activate_plugin() {
+function saasvibe_activate_plugin() {
     // Set default settings if not already present
     $default_settings = [
         'templateId'         => 'linear-dark',
@@ -69,22 +71,22 @@ function saasmenu_activate_plugin() {
         'wizard_completed'   => false,
     ];
 
-    if ( false === get_option( 'saasmenu_settings' ) ) {
-        update_option( 'saasmenu_settings', $default_settings );
+    if ( false === get_option( 'saasvibe_settings' ) ) {
+        update_option( 'saasvibe_settings', $default_settings );
     }
 
-    update_option( 'saasmenu_version', SAASMENU_VERSION );
+    update_option( 'saasvibe_version', SAASVIBE_VERSION );
 }
-register_activation_hook( __FILE__, 'saasmenu_activate_plugin' );
+register_activation_hook( __FILE__, 'saasvibe_activate_plugin' );
 
 /**
  * Handle Plugin Deactivation
  */
-function saasmenu_deactivate_plugin() {
+function saasvibe_deactivate_plugin() {
     // We do not delete the settings on deactivation to preserve user config.
     // Deactivating the plugin will naturally unhook stylesheets and restore default WP admin.
 }
-register_deactivation_hook( __FILE__, 'saasmenu_deactivate_plugin' );
+register_deactivation_hook( __FILE__, 'saasvibe_deactivate_plugin' );
 
 // Bootstrap the plugin loaders
-require_once SAASMENU_PATH . 'bootstrap/loaders.php';
+require_once SAASVIBE_PATH . 'bootstrap/loaders.php';

@@ -41,8 +41,32 @@ html.wp-toolbar {
 }
 
 /* 2. Top Bar (#wpadminbar) Styling */
-#wpadminbar * {
+#wpadminbar *:not(.ab-icon):not(.dashicons):not(.dashicons-before):not(.dashicons-before::before) {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    color: var(--saasmenu-brand-text-color, #FFFFFF) !important;
+}
+
+#wpadminbar .ab-icon,
+#wpadminbar .ab-icon::before,
+#wpadminbar .dashicons,
+#wpadminbar .dashicons::before,
+#wpadminbar .dashicons-before,
+#wpadminbar .dashicons-before::before {
+    font-family: 'dashicons' !important;
+    color: rgba(255, 255, 255, 0.8) !important; /* Semi-transparent white for blue top bar */
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: color 120ms ease !important;
+}
+
+#wpadminbar .ab-item:hover,
+#wpadminbar .ab-item:hover .ab-icon,
+#wpadminbar .ab-item:hover .ab-icon::before,
+#wpadminbar .ab-item:hover .dashicons,
+#wpadminbar .ab-item:hover .dashicons::before,
+#wpadminbar .ab-item:hover .dashicons-before,
+#wpadminbar .ab-item:hover .dashicons-before::before {
     color: var(--saasmenu-brand-text-color, #FFFFFF) !important;
 }
 
@@ -132,7 +156,7 @@ html.wp-toolbar {
 
 /* Icons styling */
 #adminmenu .wp-menu-image img {
-    opacity: 0.8 !important;
+    opacity: 0.85 !important; /* Higher default opacity for better contrast */
     transition: opacity 150ms ease !important;
 }
 
@@ -179,4 +203,19 @@ html.wp-toolbar {
 
 .folded .saasmenu-sidebar-logo-container img {
     max-height: 24px !important;
+}
+
+/* 4. Accessibility & Focus Highlights */
+#adminmenu a.menu-top:focus-visible,
+#adminmenu .wp-submenu a:focus-visible,
+#collapse-button:focus-visible {
+    outline: 2px solid var(--saasmenu-brand-text-color, #FFFFFF) !important;
+    outline-offset: -2px !important;
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+#wpadminbar .ab-item:focus-visible,
+#wpadminbar a:focus-visible {
+    outline: 2px solid var(--saasmenu-brand-text-color, #FFFFFF) !important;
+    outline-offset: -2px !important;
 }

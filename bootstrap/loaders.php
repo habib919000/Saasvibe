@@ -1,304 +1,377 @@
 <?php
+/**
+ * Plugin Initialization & Loading
+ * 
+ * Features:
+ * - Comprehensive error handling
+ * - Debug logging
+ * - Graceful failure handling
+ */
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Load routes
-require_once SAASMENU_PATH . 'routes/templates.php';
+// ============================================
+// 1. Simple Logger Class
+// ============================================
 
-/**
- * Register Admin Settings Page
- */
-add_action( 'admin_menu', function() {
-    add_options_page(
-        __( 'Nav Designer', 'saasmenu' ),
-        __( 'Nav Designer', 'saasmenu' ),
-        'manage_options',
-        'saasmenu',
-        'saasmenu_render_settings_page'
-    );
-} );
+class Saasvibe_Logger {
+    const ERROR = 'ERROR';
+    const WARNING = 'WARNING';
+    const INFO = 'INFO';
+    const DEBUG = 'DEBUG';
 
-/**
- * Render Settings Page Mount Point
- */
-function saasmenu_render_settings_page() {
-    echo '<div id="saasmenu-app"></div>';
-    echo '<div id="saasmenu-portal-root"></div>';
+    public static function log( $message, $level = self::INFO ) {
+        if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) {
+            return;
+        }
+
+        $timestamp = gmdate( '[Y-m-d H:i:s]' );
+        $log_message = "$timestamp [$level] Saasvibe: $message";
+        
+        // Log to WordPress debug log. Gated behind WP_DEBUG above; intentional debug output.
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+        error_log( $log_message );
+    }
+
+    public static function error( $message ) {
+        self::log( $message, self::ERROR );
+    }
+
+    public static function warning( $message ) {
+        self::log( $message, self::WARNING );
+    }
+
+    public static function info( $message ) {
+        self::log( $message, self::INFO );
+    }
+
+    public static function debug( $message ) {
+        self::log( $message, self::DEBUG );
+    }
 }
 
-/**
- * Enqueue Admin Settings Assets (React App)
- */
+// ============================================
+// 2. Load Routes with Error Handling
+// ============================================
+
+try {
+    $saasvibe_routes_file = SAASVIBE_PATH . 'routes/templates.php';
+
+    if ( ! file_exists( $saasvibe_routes_file ) ) {
+        throw new Exception( "Routes file not found: $saasvibe_routes_file" );
+    }
+
+    require_once $saasvibe_routes_file;
+    Saasvibe_Logger::debug( 'Routes loaded successfully' );
+    
+} catch ( Exception $e ) {
+    Saasvibe_Logger::error( 'Failed to load routes: ' . $e->getMessage() );
+    
+    // Show admin notice in WP_DEBUG mode
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        add_action( 'admin_notices', function() use ( $e ) {
+            ?>
+            <div class="notice notice-error is-dismissible">
+                <p><strong>Saasvibe Error:</strong> <?php echo esc_html( $e->getMessage() ); ?></p>
+            </div>
+            <?php
+        } );
+    }
+}
+
+// ============================================
+// 3. Register Admin Settings Page
+// ============================================
+
+try {
+    add_action( 'admin_menu', function() {
+        try {
+            add_options_page(
+                __( 'Saasvibe', 'saasvibe' ),
+                __( 'Saasvibe', 'saasvibe' ),
+                'manage_options',
+                'saasvibe',
+                'saasvibe_render_settings_page'
+            );
+            Saasvibe_Logger::debug( 'Admin menu registered' );
+        } catch ( Exception $e ) {
+            Saasvibe_Logger::error( 'Failed to register admin menu: ' . $e->getMessage() );
+        }
+    } );
+} catch ( Exception $e ) {
+    Saasvibe_Logger::error( 'Error setting up admin menu hook: ' . $e->getMessage() );
+}
+
+// ============================================
+// 4. Render Settings Page Mount Point
+// ============================================
+
+function saasvibe_render_settings_page() {
+    try {
+        echo '<div id="saasvibe-app"></div>';
+        echo '<div id="saasvibe-portal-root"></div>';
+    } catch ( Exception $e ) {
+        Saasvibe_Logger::error( 'Error rendering settings page: ' . $e->getMessage() );
+        wp_die( 'Failed to render settings page. Check error logs.' );
+    }
+}
+
+// ============================================
+// 5. Enqueue Admin Assets with Error Handling
+// ============================================
+
 add_action( 'admin_enqueue_scripts', function( $hook ) {
-    // Only load React app assets on our settings page
-    if ( 'settings_page_saasmenu' !== $hook ) {
-        return;
-    }
-
-    // Enqueue WP Media Library helper scripts
-    wp_enqueue_media();
-
-    $js_url = SAASMENU_URL . 'views/assets/dist/saasmenu.js';
-    $css_url = SAASMENU_URL . 'views/assets/dist/saasmenu.css';
-
-    // We enqueue wp-element (WordPress standard package for React + ReactDOM)
-    // and wp-i18n (WordPress translation package)
-    wp_enqueue_script(
-        'saasmenu-admin',
-        $js_url,
-        [ 'wp-element', 'wp-i18n' ],
-        SAASMENU_VERSION,
-        true
-    );
-
-    wp_enqueue_style(
-        'saasmenu-admin',
-        $css_url,
-        [],
-        SAASMENU_VERSION
-    );
-
-    // Get current settings
-    $settings = get_option( 'saasmenu_settings', [] );
-    $license  = get_option( 'saasmenu_license', [] );
-    $is_pro   = ! empty( $license['tier'] ) && in_array( $license['tier'], [ 'pro', 'agency' ], true );
-
-    // Gather roles list
-    $wp_roles = wp_roles();
-    $roles_list = [];
-    if ( ! empty( $wp_roles->roles ) ) {
-        foreach ( $wp_roles->roles as $role_key => $role_data ) {
-            $roles_list[] = [
-                'key'  => $role_key,
-                'name' => translate_user_role( $role_data['name'] ),
-            ];
+    try {
+        // Only load React app assets on our settings page
+        if ( 'settings_page_saasvibe' !== $hook ) {
+            return;
         }
-    }
 
-    // Gather menu items list
-    global $menu;
-    $menu_list = [];
-    if ( ! empty( $menu ) ) {
-        foreach ( $menu as $item ) {
-            if ( empty( $item[0] ) ) {
-                continue;
+        Saasvibe_Logger::debug( "Loading assets for hook: $hook" );
+
+        // Enqueue WP Media Library helper scripts
+        wp_enqueue_media();
+
+        $js_url = SAASVIBE_URL . 'views/assets/dist/saasmenu.js';
+        $css_url = SAASVIBE_URL . 'views/assets/dist/saasmenu.css';
+
+        // Check if files exist (optional, for debugging)
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            $js_file = SAASVIBE_PATH . 'views/assets/dist/saasmenu.js';
+            $css_file = SAASVIBE_PATH . 'views/assets/dist/saasmenu.css';
+            
+            if ( ! file_exists( $js_file ) ) {
+                Saasvibe_Logger::warning( "JS file not found: $js_file" );
             }
-            $title = wp_strip_all_tags( $item[0] );
-            $slug = $item[2];
-            $clean_slug = sanitize_title( $slug );
-            $id = ! empty( $item[5] ) ? $item[5] : ( 'menu-' . $clean_slug );
-            $menu_list[] = [
-                'id'    => $id,
-                'title' => $title,
-                'slug'  => $slug,
-            ];
+            if ( ! file_exists( $css_file ) ) {
+                Saasvibe_Logger::warning( "CSS file not found: $css_file" );
+            }
         }
-    }
 
-    // Load templates catalogue
-    $controller = new \SaasMenu\Controllers\Template_Controller();
-    $templates = $controller->get_templates_list();
+        // Enqueue JavaScript
+        wp_enqueue_script(
+            'saasvibe-admin',
+            $js_url,
+            [ 'wp-element', 'wp-i18n' ],
+            SAASVIBE_VERSION,
+            true
+        );
 
-    // Localize React App variables
-    wp_localize_script( 'saasmenu-admin', 'SaasMenu_Vars', [
-        'rest_url'   => esc_url_raw( rest_url( 'saasmenu/v1/' ) ),
-        'permission' => wp_create_nonce( 'wp_rest' ),
-        'is_admin'   => current_user_can( 'manage_options' ),
-        'is_pro'     => $is_pro,
-        'settings'   => $settings,
-        'templates'  => $templates,
-        'roles'      => $roles_list,
-        'menuItems'  => $menu_list,
-        'language'   => [
-            'locale_data' => [
-                'saasmenu' => [
-                    '' => [
-                        'domain' => 'saasmenu',
-                        'lang'   => get_user_locale(),
+        // Enqueue CSS
+        wp_enqueue_style(
+            'saasvibe-admin',
+            $css_url,
+            [],
+            SAASVIBE_VERSION
+        );
+
+        Saasvibe_Logger::debug( 'JavaScript and CSS enqueued successfully' );
+
+        // ================================
+        // Prepare Settings & Localization
+        // ================================
+
+        try {
+            // Get current settings
+            $settings = get_option( 'saasvibe_settings', [] );
+
+            // Gather roles list
+            $wp_roles = wp_roles();
+            $roles_list = [];
+            
+            if ( ! empty( $wp_roles->roles ) ) {
+                foreach ( $wp_roles->roles as $role_key => $role_data ) {
+                    $roles_list[] = [
+                        'key'  => $role_key,
+                        'name' => translate_user_role( $role_data['name'] ),
+                    ];
+                }
+            }
+
+            Saasvibe_Logger::debug( 'Loaded ' . count( $roles_list ) . ' roles' );
+
+            // Gather menu items list
+            global $menu;
+            $menu_list = [];
+            
+            if ( ! empty( $menu ) ) {
+                foreach ( $menu as $item ) {
+                    if ( empty( $item[0] ) ) {
+                        continue;
+                    }
+                    $title = wp_strip_all_tags( $item[0] );
+                    $slug = $item[2];
+                    $clean_slug = sanitize_title( $slug );
+                    $id = ! empty( $item[5] ) ? $item[5] : ( 'menu-' . $clean_slug );
+                    $menu_list[] = [
+                        'id'    => $id,
+                        'title' => $title,
+                        'slug'  => $slug,
+                    ];
+                }
+            }
+
+            Saasvibe_Logger::debug( 'Loaded ' . count( $menu_list ) . ' menu items' );
+
+            // Load templates catalogue
+            try {
+                $controller = new \Saasvibe\Controllers\Template_Controller();
+                $templates = $controller->get_templates_list();
+                Saasvibe_Logger::debug( 'Loaded ' . count( $templates ) . ' templates' );
+            } catch ( Exception $e ) {
+                Saasvibe_Logger::error( 'Failed to load templates: ' . $e->getMessage() );
+                $templates = [];
+            }
+
+            // Localize React App variables
+            wp_localize_script( 'saasvibe-admin', 'SaasMenu_Vars', [
+                'rest_url'   => esc_url_raw( rest_url( 'saasvibe/v1/' ) ),
+                'permission' => wp_create_nonce( 'wp_rest' ),
+                'is_admin'   => current_user_can( 'manage_options' ),
+                'settings'   => $settings,
+                'templates'  => $templates,
+                'roles'      => $roles_list,
+                'menuItems'  => $menu_list,
+                'language'   => [
+                    'locale_data' => [
+                        'saasvibe' => [
+                            '' => [
+                                'domain' => 'saasvibe',
+                                'lang'   => get_user_locale(),
+                            ],
+                        ],
                     ],
                 ],
-            ],
-        ],
-    ] );
-} );
+            ] );
 
-/**
- * Enqueue Active Template and CSS Custom Properties globally in admin
- */
-add_action( 'admin_enqueue_scripts', function() {
-    // Check if Safe Mode is activated via query param
-    if ( isset( $_GET['saasmenu_safe_mode'] ) && '1' === $_GET['saasmenu_safe_mode'] ) {
-        return;
-    }
+            Saasvibe_Logger::debug( 'Settings localized for React app' );
 
-    $settings = get_option( 'saasmenu_settings', [] );
-    if ( empty( $settings['templateId'] ) ) {
-        return;
-    }
-
-    $template_id = sanitize_key( $settings['templateId'] );
-    
-    // Check if template file exists
-    $template_css_file = SAASMENU_PATH . 'assets/css/templates/' . $template_id . '.css';
-    $template_css_url  = SAASMENU_URL . 'assets/css/templates/' . $template_id . '.css';
-
-    if ( file_exists( $template_css_file ) ) {
-        wp_enqueue_style(
-            'saasmenu-template-' . $template_id,
-            $template_css_url,
-            [],
-            SAASMENU_VERSION
-        );
-
-        // Derive and inject dynamic CSS variables
-        $controller = new \SaasMenu\Controllers\Template_Controller();
-        $custom_css = $controller->generate_dynamic_css( $settings );
-
-        if ( ! empty( $custom_css ) ) {
-            wp_add_inline_style( 'saasmenu-template-' . $template_id, $custom_css );
-        }
-    }
-}, 99 );
-
-/**
- * Append User Roles as Admin Body Class
- */
-add_filter( 'admin_body_class', function( $classes ) {
-    $current_user = wp_get_current_user();
-    if ( ! empty( $current_user->roles ) ) {
-        foreach ( $current_user->roles as $role ) {
-            $classes .= ' role-' . sanitize_html_class( $role );
-        }
-    }
-    return $classes;
-} );
-
-/**
- * Customize WP Admin Bar (Top Bar)
- */
-add_action( 'admin_bar_menu', function( $wp_admin_bar ) {
-    // Check Safe Mode
-    if ( isset( $_GET['saasmenu_safe_mode'] ) && '1' === $_GET['saasmenu_safe_mode'] ) {
-        return;
-    }
-
-    $settings = get_option( 'saasmenu_settings', [] );
-    if ( empty( $settings ) ) {
-        return;
-    }
-
-    // Hide default nodes if configured
-    $hide_settings = isset( $settings['hideTopBarItems'] ) ? $settings['hideTopBarItems'] : [];
-    
-    if ( ! empty( $hide_settings['wpLogo'] ) ) {
-        $wp_admin_bar->remove_node( 'wp-logo' );
-    }
-    if ( ! empty( $hide_settings['siteName'] ) ) {
-        $wp_admin_bar->remove_node( 'site-name' );
-    }
-    if ( ! empty( $hide_settings['search'] ) ) {
-        $wp_admin_bar->remove_node( 'search' );
-    }
-    if ( ! empty( $hide_settings['notifications'] ) ) {
-        $wp_admin_bar->remove_node( 'comments' ); // Comments are the notification hook in standard WP
-    }
-    if ( ! empty( $hide_settings['howdy'] ) ) {
-        // Howdy is inside user-info. We will restyle it using CSS instead since deleting the node deletes the user menu.
-    }
-
-    // Add Environment Badge if active
-    $env_badge = isset( $settings['environmentBadge'] ) ? $settings['environmentBadge'] : [];
-    if ( ! empty( $env_badge['enabled'] ) ) {
-        $label = ! empty( $env_badge['label'] ) ? $env_badge['label'] : wp_get_environment_type();
-        $color = ! empty( $env_badge['color'] ) ? $env_badge['color'] : '#5E6AD2';
-        
-        $wp_admin_bar->add_node( [
-            'id'    => 'saasmenu-env-badge',
-            'title' => sprintf(
-                '<span class="saasmenu-env-badge-pill" style="background-color: %s; color: #fff; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; line-height: 1; display: inline-block; vertical-align: middle;">%s</span>',
-                esc_attr( $color ),
-                esc_html( $label )
-            ),
-            'href'  => '#',
-            'meta'  => [
-                'class' => 'saasmenu-env-badge-container',
-            ],
-        ] );
-    }
-
-    // Handle Custom Logo in Top Bar
-    if ( ! empty( $settings['customLogo'] ) ) {
-        // If site name is removed or we want the custom logo to replace/augment the site name link
-        $logo_html = sprintf(
-            '<div class="saasmenu-topbar-logo-wrapper"><img class="saasmenu-topbar-logo" src="%s" alt="%s" style="max-height: 24px; max-width: 150px; object-fit: contain; vertical-align: middle;" /></div>',
-            esc_url( $settings['customLogo'] ),
-            esc_attr( get_bloginfo( 'name' ) )
-        );
-
-        $wp_admin_bar->add_node( [
-            'id'    => 'saasmenu-site-logo',
-            'title' => $logo_html,
-            'href'  => admin_url(),
-            'meta'  => [
-                'class' => 'saasmenu-topbar-logo-node',
-            ],
-        ] );
-    }
-}, 11 );
-
-/**
- * Handle custom JS scripts globally in admin (e.g. prepending sidebar custom logo)
- */
-add_action( 'admin_footer', function() {
-    if ( isset( $_GET['saasmenu_safe_mode'] ) && '1' === $_GET['saasmenu_safe_mode'] ) {
-        return;
-    }
-
-    $settings = get_option( 'saasmenu_settings', [] );
-    if ( empty( $settings ) ) {
-        return;
-    }
-
-    $custom_logo = ! empty( $settings['customLogo'] ) ? esc_url( $settings['customLogo'] ) : '';
-    $site_name   = esc_html( get_bloginfo( 'name' ) );
-    
-    // Check if we want a logo in the sidebar
-    // We can inject it using a tiny footer script
-    ?>
-    <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            var adminMenu = document.getElementById('adminmenu');
-            var customLogo = <?php echo json_encode( $custom_logo ); ?>;
-            var siteName = <?php echo json_encode( $site_name ); ?>;
+        } catch ( Exception $e ) {
+            Saasvibe_Logger::error( 'Error preparing settings: ' . $e->getMessage() );
             
-            if (adminMenu && customLogo) {
-                // Remove existing sidebar logo if any
-                var existingLogo = document.getElementById('saasmenu-sidebar-logo-wrap');
-                if (existingLogo) {
-                    existingLogo.remove();
-                }
-                
-                var logoWrap = document.createElement('div');
-                logoWrap.id = 'saasmenu-sidebar-logo-wrap';
-                logoWrap.className = 'saasmenu-sidebar-logo-container';
-                logoWrap.style.padding = '16px';
-                logoWrap.style.textAlign = 'center';
-                logoWrap.style.borderBottom = '1px solid rgba(255, 255, 255, 0.08)';
-                
-                var logoImg = document.createElement('img');
-                logoImg.src = customLogo;
-                logoImg.alt = siteName;
-                logoImg.style.maxHeight = '40px';
-                logoImg.style.maxWidth = '100%';
-                logoImg.style.objectFit = 'contain';
-                logoImg.style.display = 'block';
-                logoImg.style.margin = '0 auto';
-                
-                logoWrap.appendChild(logoImg);
-                adminMenu.insertBefore(logoWrap, adminMenu.firstChild);
-            }
-        });
-    </script>
-    <?php
+            // Still pass empty settings to prevent JS errors
+            wp_localize_script( 'saasvibe-admin', 'SaasMenu_Vars', [
+                'rest_url'   => esc_url_raw( rest_url( 'saasvibe/v1/' ) ),
+                'permission' => wp_create_nonce( 'wp_rest' ),
+                'error'      => 'Failed to load settings. Check server logs.',
+            ] );
+        }
+
+    } catch ( Exception $e ) {
+        Saasvibe_Logger::error( 'Critical error in asset enqueue: ' . $e->getMessage() );
+        
+        // Show admin notice
+        add_action( 'admin_notices', function() use ( $e ) {
+            ?>
+            <div class="notice notice-error is-dismissible">
+                <p><strong>Saasvibe Error:</strong> Failed to load admin interface. Check error logs.</p>
+            </div>
+            <?php
+        } );
+    }
 } );
+
+// ============================================
+// 5b. Apply Active Template to the WP Admin Chrome
+// ============================================
+//
+// Runs on every admin page (not just the settings page) so the chosen
+// template + brand settings actually style the dashboard. The template
+// stylesheets live in assets/css/templates/{templateId}.css and consume
+// CSS custom properties that we inject inline from the saved settings.
+
+add_action( 'admin_enqueue_scripts', function() {
+    try {
+        $settings = get_option( 'saasvibe_settings', [] );
+
+        $template_id = $settings['templateId'] ?? '';
+        if ( '' === $template_id ) {
+            return;
+        }
+
+        // Role visibility: empty == show to everyone. Otherwise only apply
+        // when one of the current user's roles is enabled. Supports both a
+        // list of role keys and a { role: bool } map.
+        $role_visibility = $settings['roleVisibility'] ?? [];
+        if ( ! empty( $role_visibility ) ) {
+            $user    = wp_get_current_user();
+            $allowed = false;
+            foreach ( (array) $user->roles as $role ) {
+                if ( in_array( $role, $role_visibility, true )
+                    || ( isset( $role_visibility[ $role ] ) && $role_visibility[ $role ] ) ) {
+                    $allowed = true;
+                    break;
+                }
+            }
+            if ( ! $allowed ) {
+                return;
+            }
+        }
+
+        // Resolve template stylesheet (guard against path traversal).
+        $safe_id   = sanitize_file_name( $template_id );
+        $css_path  = SAASVIBE_PATH . 'assets/css/templates/' . $safe_id . '.css';
+        if ( ! file_exists( $css_path ) ) {
+            Saasvibe_Logger::warning( "Template CSS not found: $css_path" );
+            return;
+        }
+
+        wp_enqueue_style(
+            'saasvibe-template',
+            SAASVIBE_URL . 'assets/css/templates/' . $safe_id . '.css',
+            [],
+            SAASVIBE_VERSION
+        );
+
+        // Inject user-driven custom properties. Brand hover/text colors are
+        // left to each template's own fallbacks so light/dark themes stay legible.
+        $brand   = $settings['brandColor'] ?? '#5E6AD2';
+        $sidebar = (int) ( $settings['sidebarWidth'] ?? 240 );
+        $topbar  = (int) ( $settings['topBarHeight'] ?? 46 );
+        $compact = ( ( $settings['density'] ?? 'normal' ) === 'compact' );
+
+        $pad      = $compact ? '6px 10px' : '8px 12px';
+        $pad_left = $compact ? '10px' : '12px';
+
+        $brand    = sanitize_text_field( $brand );
+
+        $vars = sprintf(
+            ':root{--saasmenu-brand-color:%s;--saasmenu-sidebar-width:%dpx;--saasmenu-topbar-height:%dpx;--saasmenu-menu-item-padding:%s;--saasmenu-menu-item-padding-left:%s;}',
+            $brand,
+            $sidebar,
+            $topbar,
+            $pad,
+            $pad_left
+        );
+
+        wp_add_inline_style( 'saasvibe-template', $vars );
+        Saasvibe_Logger::debug( "Applied template '$safe_id' to admin chrome" );
+
+    } catch ( Exception $e ) {
+        Saasvibe_Logger::error( 'Failed to apply template to admin: ' . $e->getMessage() );
+    }
+}, 20 );
+
+// ============================================
+// 6. Global Error Handler
+// ============================================
+
+// Catch fatal errors during initialization
+register_shutdown_function( function() {
+    $last_error = error_get_last();
+    
+    if ( $last_error && in_array( $last_error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR ], true ) ) {
+        Saasvibe_Logger::error( sprintf(
+            'Fatal Error (%s): %s in %s on line %d',
+            $last_error['type'],
+            $last_error['message'],
+            $last_error['file'],
+            $last_error['line']
+        ) );
+    }
+} );
+
+// Log successful initialization
+Saasvibe_Logger::info( 'Plugin loader initialized successfully' );
