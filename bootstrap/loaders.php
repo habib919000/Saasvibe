@@ -226,7 +226,7 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
             }
 
             // Localize React App variables
-            wp_localize_script( 'saasvibe-admin', 'SaasMenu_Vars', [
+            $saasvibe_vars = [
                 'rest_url'   => esc_url_raw( rest_url( 'saasvibe/v1/' ) ),
                 'permission' => wp_create_nonce( 'wp_rest' ),
                 'is_admin'   => current_user_can( 'manage_options' ),
@@ -244,7 +244,12 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
                         ],
                     ],
                 ],
-            ] );
+            ];
+
+            // The bundle references both globals (incomplete rebrand). Expose
+            // the same payload under each name so every chunk resolves.
+            wp_localize_script( 'saasvibe-admin', 'SaasMenu_Vars', $saasvibe_vars );
+            wp_localize_script( 'saasvibe-admin', 'Saasvibe_Vars', $saasvibe_vars );
 
             Saasvibe_Logger::debug( 'Settings localized for React app' );
 
@@ -252,11 +257,13 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
             Saasvibe_Logger::error( 'Error preparing settings: ' . $e->getMessage() );
             
             // Still pass empty settings to prevent JS errors
-            wp_localize_script( 'saasvibe-admin', 'SaasMenu_Vars', [
+            $saasvibe_vars = [
                 'rest_url'   => esc_url_raw( rest_url( 'saasvibe/v1/' ) ),
                 'permission' => wp_create_nonce( 'wp_rest' ),
                 'error'      => 'Failed to load settings. Check server logs.',
-            ] );
+            ];
+            wp_localize_script( 'saasvibe-admin', 'SaasMenu_Vars', $saasvibe_vars );
+            wp_localize_script( 'saasvibe-admin', 'Saasvibe_Vars', $saasvibe_vars );
         }
 
     } catch ( Exception $e ) {
@@ -337,9 +344,17 @@ add_action( 'admin_enqueue_scripts', function() {
 
         $brand    = sanitize_text_field( $brand );
 
+        // Derive brand hover tint + contrast text color so the preview's
+        // brand-driven highlights are reproduced 1:1 in the real admin.
+        $rgb        = saasvibe_hex_to_rgb( $brand );
+        $brand_hover = sprintf( 'rgba(%d,%d,%d,0.10)', $rgb['r'], $rgb['g'], $rgb['b'] );
+        $brand_text  = saasvibe_contrast_color( $rgb );
+
         $vars = sprintf(
-            ':root{--saasmenu-brand-color:%s;--saasmenu-sidebar-width:%dpx;--saasmenu-topbar-height:%dpx;--saasmenu-menu-item-padding:%s;--saasmenu-menu-item-padding-left:%s;}',
+            ':root{--saasmenu-brand-color:%s;--saasmenu-brand-hover-color:%s;--saasmenu-brand-text-color:%s;--saasmenu-sidebar-width:%dpx;--saasmenu-topbar-height:%dpx;--saasmenu-menu-item-padding:%s;--saasmenu-menu-item-padding-left:%s;}',
             $brand,
+            $brand_hover,
+            $brand_text,
             $sidebar,
             $topbar,
             $pad,
@@ -353,6 +368,171 @@ add_action( 'admin_enqueue_scripts', function() {
         Saasvibe_Logger::error( 'Failed to apply template to admin: ' . $e->getMessage() );
     }
 }, 20 );
+
+// ============================================
+// 5c. Apply Helpers + Chrome Feature Parity
+// ============================================
+//
+// The settings UI previews a custom sidebar logo, an environment badge, and
+// hidden top-bar items. These hooks reproduce those features in the live admin
+// so the real dashboard matches the preview.
+
+/**
+ * Convert a #hex color (3 or 6 digit) to an [r,g,b] map.
+ */
+if ( ! function_exists( 'saasvibe_hex_to_rgb' ) ) {
+    function saasvibe_hex_to_rgb( $hex ) {
+        $hex = ltrim( (string) $hex, '#' );
+        if ( strlen( $hex ) === 3 ) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        if ( strlen( $hex ) !== 6 || ! ctype_xdigit( $hex ) ) {
+            return [ 'r' => 94, 'g' => 106, 'b' => 210 ]; // #5E6AD2 fallback
+        }
+        return [
+            'r' => hexdec( substr( $hex, 0, 2 ) ),
+            'g' => hexdec( substr( $hex, 2, 2 ) ),
+            'b' => hexdec( substr( $hex, 4, 2 ) ),
+        ];
+    }
+}
+
+/**
+ * Pick black or white for legible text on a given brand color.
+ * Mirrors the React preview's getIdealTextColor (relative luminance).
+ */
+if ( ! function_exists( 'saasvibe_contrast_color' ) ) {
+    function saasvibe_contrast_color( array $rgb ) {
+        $luminance = ( 0.2126 * $rgb['r'] + 0.7152 * $rgb['g'] + 0.0722 * $rgb['b'] ) / 255;
+        return $luminance > 0.5 ? '#000000' : '#FFFFFF';
+    }
+}
+
+/**
+ * Resolve the active settings for the current admin user, or null when the
+ * plugin should not apply (no template, or hidden by role visibility).
+ * Centralizes the gating shared by every chrome hook.
+ */
+if ( ! function_exists( 'saasvibe_get_applied_settings' ) ) {
+    function saasvibe_get_applied_settings() {
+        $settings = get_option( 'saasvibe_settings', [] );
+
+        if ( empty( $settings['templateId'] ) ) {
+            return null;
+        }
+
+        $role_visibility = $settings['roleVisibility'] ?? [];
+        if ( ! empty( $role_visibility ) ) {
+            $user    = wp_get_current_user();
+            $allowed = false;
+            foreach ( (array) $user->roles as $role ) {
+                if ( in_array( $role, $role_visibility, true )
+                    || ( isset( $role_visibility[ $role ] ) && $role_visibility[ $role ] ) ) {
+                    $allowed = true;
+                    break;
+                }
+            }
+            if ( ! $allowed ) {
+                return null;
+            }
+        }
+
+        return $settings;
+    }
+}
+
+// --- Custom sidebar logo ----------------------------------------------------
+// WP has no native sidebar header, so inject a logo container at the top of
+// #adminmenu. The template stylesheets already style .saasmenu-sidebar-logo-container.
+add_action( 'admin_enqueue_scripts', function() {
+    $settings = saasvibe_get_applied_settings();
+    if ( null === $settings ) {
+        return;
+    }
+
+    $logo = $settings['customLogo'] ?? '';
+    if ( empty( $logo ) ) {
+        return;
+    }
+
+    $js = sprintf(
+        '(function(){var m=document.getElementById("adminmenu");if(!m||document.querySelector(".saasmenu-sidebar-logo-container"))return;'
+        . 'var li=document.createElement("li");li.className="saasmenu-sidebar-logo-container";'
+        . 'var i=document.createElement("img");i.src=%s;i.alt="Logo";li.appendChild(i);'
+        . 'm.insertBefore(li,m.firstChild);})();',
+        wp_json_encode( esc_url( $logo ) )
+    );
+
+    // 'common' is enqueued on every admin page.
+    wp_add_inline_script( 'common', $js );
+}, 20 );
+
+// --- Environment badge + hidden top-bar items -------------------------------
+add_action( 'admin_bar_menu', function( $wp_admin_bar ) {
+    $settings = saasvibe_get_applied_settings();
+    if ( null === $settings ) {
+        return;
+    }
+
+    // Hide selected native nodes.
+    $hide = $settings['hideTopBarItems'] ?? [];
+    $node_map = [
+        'wpLogo'        => 'wp-logo',
+        'siteName'      => 'site-name',
+        'search'        => 'search',
+        'notifications' => 'comments',
+        'howdy'         => 'my-account',
+    ];
+    foreach ( $node_map as $key => $node_id ) {
+        if ( ! empty( $hide[ $key ] ) ) {
+            $wp_admin_bar->remove_node( $node_id );
+        }
+    }
+
+    // Environment badge (right side).
+    $badge = $settings['environmentBadge'] ?? [];
+    if ( ! empty( $badge['enabled'] ) ) {
+        $label = $badge['label'] ?? 'Development';
+        $wp_admin_bar->add_node( [
+            'id'     => 'saasvibe-env-badge',
+            'parent' => 'top-secondary',
+            'title'  => '<span class="saasvibe-env-badge">' . esc_html( $label ) . '</span>',
+            'meta'   => [ 'class' => 'saasvibe-env-badge-node' ],
+        ] );
+    }
+}, 999 );
+
+// Style the environment badge pill to match the preview.
+add_action( 'admin_enqueue_scripts', function() {
+    $settings = saasvibe_get_applied_settings();
+    if ( null === $settings ) {
+        return;
+    }
+    $badge = $settings['environmentBadge'] ?? [];
+    if ( empty( $badge['enabled'] ) ) {
+        return;
+    }
+
+    $color = $badge['color'] ?? '#5E6AD2';
+    if ( ! preg_match( '/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $color ) ) {
+        $color = '#5E6AD2';
+    }
+
+    $css = sprintf(
+        '#wpadminbar .saasvibe-env-badge{display:inline-block;background:%s;color:#fff;'
+        . 'font-size:11px;font-weight:600;line-height:1.6;padding:0 10px;border-radius:9999px;'
+        . 'letter-spacing:.02em;}'
+        . '#wpadminbar #wp-admin-bar-saasvibe-env-badge .ab-item{background:transparent !important;}',
+        $color
+    );
+
+    // Attach to our template stylesheet when present, else to the admin bar style.
+    if ( wp_style_is( 'saasvibe-template', 'enqueued' ) ) {
+        wp_add_inline_style( 'saasvibe-template', $css );
+    } else {
+        wp_add_inline_style( 'admin-bar', $css );
+    }
+}, 21 );
 
 // ============================================
 // 6. Global Error Handler

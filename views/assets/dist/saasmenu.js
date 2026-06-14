@@ -1979,7 +1979,7 @@ const App = () => {
   const api = (0,_hooks_useApi__WEBPACK_IMPORTED_MODULE_13__["default"])();
 
   // Configuration states loaded from localized variable
-  const initialSettings = window.Saasvibe_Vars?.settings || {};
+  const initialSettings = window.SaasMenu_Vars?.settings || {};
   const [settings, setSettings] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({
     templateId: 'linear-dark',
     brandColor: '#5E6AD2',
@@ -2010,7 +2010,7 @@ const App = () => {
   const [wizardStep, setWizardStep] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1);
 
   // Get active template info
-  const templates = window.Saasvibe_Vars?.templates || [];
+  const templates = window.SaasMenu_Vars?.templates || [];
   const activeTemplate = templates.find(t => t.id === settings.templateId) || templates[0];
 
   // Apply theme class based on active template
@@ -2044,8 +2044,8 @@ const App = () => {
       if (response.success) {
         sonner__WEBPACK_IMPORTED_MODULE_3__.toast.success((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Settings saved successfully!', 'saasvibe'));
         // Sync global var so page reloads have it
-        if (window.Saasvibe_Vars) {
-          window.Saasvibe_Vars.settings = response.data;
+        if (window.SaasMenu_Vars) {
+          window.SaasMenu_Vars.settings = response.data;
         }
       } else {
         sonner__WEBPACK_IMPORTED_MODULE_3__.toast.error(response.message || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Failed to save settings.', 'saasvibe'));
@@ -2235,7 +2235,7 @@ const App = () => {
     className: "text-lg font-bold text-slate-800 m-0 leading-tight"
   }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Saasvibe', 'saasvibe')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
     className: "text-xs text-slate-400"
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.sprintf)((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Version %s', 'saasvibe'), window.Saasvibe_Vars?.version || '2.0.0')))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.sprintf)((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Version %s', 'saasvibe'), window.SaasMenu_Vars?.version || '2.0.0')))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "flex items-center gap-3"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     onClick: () => setShowWizard(true),
@@ -2305,15 +2305,15 @@ const App = () => {
     className: "bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold select-none"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", {
     className: "p-4"
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Navigation Menu Item', 'saasvibe')), (window.Saasvibe_Vars?.roles || []).map(role => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)('Navigation Menu Item', 'saasvibe')), (window.SaasMenu_Vars?.roles || []).map(role => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("th", {
     key: role.key,
     className: "p-4 text-center"
-  }, role.name)))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("tbody", null, (window.Saasvibe_Vars?.menuItems || []).map(item => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("tr", {
+  }, role.name)))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("tbody", null, (window.SaasMenu_Vars?.menuItems || []).map(item => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("tr", {
     key: item.id,
     className: "border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("td", {
     className: "p-4 font-medium text-slate-700"
-  }, item.title), (window.Saasvibe_Vars?.roles || []).map(role => {
+  }, item.title), (window.SaasMenu_Vars?.roles || []).map(role => {
     const isHidden = settings.roleVisibility?.[role.key]?.[item.id] || false;
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("td", {
       key: role.key,
