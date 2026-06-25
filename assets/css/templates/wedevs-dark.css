@@ -1,0 +1,324 @@
+/* weDevs Dark Template (Template 4) */
+
+/* 1. Reset & General Layout */
+#adminmenu,
+#adminmenuback,
+#adminmenuwrap {
+    background-color: #000000 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+#adminmenu {
+    margin: 0 !important;
+    padding-top: 10px !important;
+}
+
+#adminmenu li.wp-menu-separator {
+    height: 1px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    margin: 12px 16px !important;
+}
+
+/* Enforce completely transparent LI to prevent WP core blue from bleeding through */
+#adminmenu li, 
+#adminmenu li.menu-top, 
+#adminmenu li.wp-has-current-submenu, 
+#adminmenu li.opensub, 
+#adminmenu li.current {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* 2. Top-Level Menu Items */
+#adminmenu a.menu-top {
+    color: #FFFFFF !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    /* Creating the pill shape */
+    border-radius: 40px !important;
+    margin: 4px 12px !important;
+    transition: background-color 150ms ease, color 150ms ease !important;
+    /* Reset default WP styles */
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Flex layout for expanded sidebar */
+body:not(.folded) #adminmenu a.menu-top {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 16px !important;
+}
+
+body:not(.folded) #adminmenu .wp-menu-image {
+    float: none !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+body:not(.folded) #adminmenu .wp-menu-name {
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 1.4 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Folded state adjustments */
+.folded #adminmenu a.menu-top {
+    padding: 10px 0 !important;
+    text-align: center !important;
+}
+
+/* Fix WP core focus ring (white crescent shadow) */
+#adminmenu a:focus,
+#adminmenu a:active,
+#adminmenu .wp-submenu a:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Hide WP core default pseudo-element arrows */
+#adminmenu li.wp-has-current-submenu a.wp-has-current-submenu::after,
+#adminmenu li.menu-top:hover a.menu-top::after,
+#adminmenu li.opensub > a.menu-top::after {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+}
+
+/* Icons */
+#adminmenu .wp-menu-image::before,
+#adminmenu svg.wp-menu-image {
+    color: var(--saasvibe-brand-color, #FF5858) !important;
+    opacity: 0.9 !important;
+    transition: opacity 150ms ease, color 150ms ease !important;
+}
+
+#adminmenu a.menu-top:hover .wp-menu-image::before,
+#adminmenu a.menu-top:hover svg.wp-menu-image {
+    opacity: 1 !important;
+    color: var(--saasvibe-brand-color, #FF5858) !important;
+}
+
+#adminmenu li.wp-has-current-submenu .wp-menu-image::before,
+#adminmenu li.current .wp-menu-image::before,
+#adminmenu li.wp-has-current-submenu svg.wp-menu-image,
+#adminmenu li.current svg.wp-menu-image {
+    opacity: 1 !important;
+    color: #FFFFFF !important;
+}
+
+/* Hover State */
+/* We use the custom hover color (Primary 20% opacity) or fallback */
+#adminmenu li.menu-top:hover > a.menu-top,
+#adminmenu li.opensub > a.menu-top {
+    background-color: var(--saasvibe-brand-hover-color, rgba(255, 88, 88, 0.2)) !important;
+    color: #FFFFFF !important;
+}
+
+/* Active State */
+#adminmenu li.wp-has-current-submenu > a.menu-top,
+#adminmenu li.current > a.menu-top,
+#adminmenu li.wp-has-current-submenu.wp-menu-open > a.menu-top {
+    background-color: var(--saasvibe-brand-color, #FF5858) !important;
+    color: #FFFFFF !important;
+}
+
+/* 3. Submenus */
+#adminmenu .wp-submenu {
+    background-color: #000000 !important;
+    padding: 8px 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+}
+
+#adminmenu .wp-submenu a {
+    color: #FFFFFF !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    /* Creating the pill shape */
+    border-radius: 40px !important;
+    margin: 4px 12px !important;
+    padding: 8px 12px 8px 28px !important;
+    transition: background-color 150ms ease !important;
+}
+
+/* Hide any WP core injected pseudo-elements on submenu items (like hover dots/lines) */
+#adminmenu .wp-submenu a::before,
+#adminmenu .wp-submenu a::after {
+    display: none !important;
+    content: none !important;
+    background: transparent !important;
+}
+
+/* Submenu Hover & Active State */
+#adminmenu .wp-submenu a:hover,
+#adminmenu .wp-submenu a:focus,
+#adminmenu .wp-submenu a:active,
+#adminmenu .wp-submenu li.current a {
+    background-color: var(--saasvibe-brand-color, #FF5858) !important;
+    color: #FFFFFF !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border: none !important;
+}
+
+/* Hide the default submenu arrow pointer */
+#adminmenu li.wp-has-current-submenu .wp-menu-arrow,
+#adminmenu li.wp-has-current-submenu .wp-menu-arrow div {
+    display: none !important;
+}
+
+/* 4. Collapse Button */
+#collapse-button {
+    color: #FFFFFF !important;
+    margin: 8px 12px !important;
+    border-radius: 40px !important;
+    transition: background-color 150ms ease !important;
+}
+
+#collapse-button:hover {
+    background-color: var(--saasvibe-brand-hover-color, rgba(255, 88, 88, 0.2)) !important;
+    color: #FFFFFF !important;
+}
+
+#collapse-button .collapse-button-icon {
+    color: #FFFFFF !important;
+}
+
+/* Custom logo styling inside sidebar */
+.saasvibe-sidebar-logo-container {
+    height: var(--saasvibe-topbar-height, 46px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    margin-bottom: 10px !important;
+}
+
+.saasvibe-sidebar-logo-container img {
+    max-width: 100% !important;
+    max-height: calc(var(--saasvibe-topbar-height, 46px) - 16px) !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+}
+
+.folded .saasvibe-sidebar-logo-container {
+    padding: 8px !important;
+}
+
+.folded .saasvibe-sidebar-logo-container img {
+    max-height: 24px !important;
+}
+
+/* ==============================================================
+ * WP Admin Top Bar Styling
+ * ============================================================== */
+
+/* Top bar Height & Background Override */
+#wpadminbar {
+    height: var(--saasvibe-topbar-height, 46px) !important;
+    min-height: var(--saasvibe-topbar-height, 46px) !important;
+    background: #000000 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-sizing: border-box;
+}
+
+body.admin-bar #wpbody {
+    padding-top: var(--saasvibe-topbar-height, 46px) !important;
+}
+
+html.wp-toolbar {
+    padding-top: var(--saasvibe-topbar-height, 46px) !important;
+}
+
+/* Typography and Colors */
+#wpadminbar *:not(.ab-icon):not(.dashicons):not(.dashicons-before):not(.dashicons-before::before) {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    color: #FFFFFF !important;
+}
+
+#wpadminbar .ab-icon,
+#wpadminbar .ab-icon::before,
+#wpadminbar .dashicons,
+#wpadminbar .dashicons::before,
+#wpadminbar .dashicons-before,
+#wpadminbar .dashicons-before::before {
+    font-family: 'dashicons' !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: color 150ms ease !important;
+}
+
+/* Link height & Flex Alignment */
+#wpadminbar .ab-item,
+#wpadminbar .ab-empty-item {
+    height: var(--saasvibe-topbar-height, 46px) !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 12px !important;
+}
+
+#wpadminbar .ab-icon {
+    float: none !important;
+    margin: 0 6px 0 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#wpadminbar .ab-icon::before,
+#wpadminbar .dashicons-before::before {
+    position: relative !important;
+    top: auto !important;
+}
+
+#wpadminbar .ab-label,
+#wpadminbar .ab-item span:not(.ab-icon) {
+    line-height: normal !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Hover States for Top Bar */
+#wpadminbar .ab-item:hover,
+#wpadminbar .ab-item:focus,
+#wpadminbar .ab-item:hover .ab-icon,
+#wpadminbar .ab-item:hover .ab-icon::before,
+#wpadminbar .ab-item:hover .dashicons,
+#wpadminbar .ab-item:hover .dashicons::before {
+    color: var(--saasvibe-brand-color, #FF5858) !important;
+}
+
+#wpadminbar #wp-admin-bar-root-default > li:hover > .ab-item,
+#wpadminbar .quicklinks .menupop:hover > .ab-item {
+    background-color: var(--saasvibe-brand-hover-color, rgba(255, 88, 88, 0.2)) !important;
+}
+
+/* Dropdown Menus */
+#wpadminbar .ab-sub-wrapper {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+    background: #000000 !important;
+}
+
+#wpadminbar .ab-submenu .ab-item:hover {
+    color: #FFFFFF !important;
+    background-color: var(--saasvibe-brand-color, #FF5858) !important;
+}

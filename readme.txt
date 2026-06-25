@@ -3,7 +3,7 @@ Contributors: habib919000
 Tags: admin, dashboard, customization, templates, branding
 Requires at least: 5.8
 Requires PHP: 7.4
-Tested up to: 7.0
+Tested up to: 6.6
 Stable tag: 1.0.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -29,7 +29,7 @@ Build for WordPress 5.8+, tested through 6.6, with full PHP 7.4 compatibility.
 * Upload your company logo to the sidebar
 * Adjustable sidebar width (150-400px range)
 * Top bar height customization (30-200px)
-* Menu density toggle (compact, normal)
+* Menu density toggle (compact, normal, relaxed)
 * Environment badges for dev/staging/production
 
 **Security & Access Control**
@@ -41,9 +41,8 @@ Build for WordPress 5.8+, tested through 6.6, with full PHP 7.4 compatibility.
 * Error logging and monitoring
 
 **Developer Features**
-* RESTful API with 6 endpoints
+* RESTful API with 5 endpoints
 * React-based admin interface
-* Comprehensive unit test suite
 * Internationalization ready
 * Complete API documentation
 
@@ -108,7 +107,9 @@ WCAG 2.1 AA compliant:
 6. Configure role visibility if needed
 7. Click Save Settings
 
-All changes apply instantly. No page reload needed.
+The live preview inside the settings screen updates instantly as you edit. Your
+changes are applied to the rest of the WordPress admin (sidebar, badge, logo,
+hidden top-bar items) on the next page load after you save.
 
 == Frequently Asked Questions ==
 
@@ -134,7 +135,7 @@ This plugin only affects the WordPress admin interface (wp-admin), not your publ
 Yes. The Advanced tab includes import/export functionality. Export settings as JSON and import on other WordPress installations.
 
 = Is my data secure? =
-Absolutely. All inputs are validated and sanitized. API endpoints require nonce verification. Settings are encrypted in the database. No external data collection.
+All inputs are validated and sanitized, and every mutating API endpoint requires nonce verification and the `manage_options` capability. Settings are stored in the standard WordPress options table and the plugin performs no external data collection.
 
 = Do you offer support? =
 Yes. Visit our documentation at https://github.com/habib919000/saasvibe for guides, troubleshooting, and contact information.
@@ -154,7 +155,7 @@ Yes. Visit our documentation at https://github.com/habib919000/saasvibe for guid
 **Security Hardening (P0 Priority):**
 * Comprehensive input validation for hex colors, URLs, numeric ranges
 * CSRF protection on all REST API endpoints with nonce verification
-* SQL injection prevention in all database queries
+* Output escaping and input sanitization throughout (settings use the WordPress options API; no direct SQL queries)
 * Proper WordPress capability checks
 * Error handling with graceful fallbacks
 * Security audit and code review completed
@@ -168,7 +169,7 @@ Yes. Visit our documentation at https://github.com/habib919000/saasvibe for guid
 * Better error messages for user guidance
 
 **Features:**
-* 6 design templates (3 free, 3 premium)
+* 3 design templates (Linear Dark, Vercel Minimal, Classic Elevated)
 * Brand customization (color and logo)
 * Adjustable sidebar width and top bar height
 * Menu density controls (compact, normal, relaxed)
@@ -180,20 +181,15 @@ Yes. Visit our documentation at https://github.com/habib919000/saasvibe for guid
 * Live interface preview
 
 **Developer Experience:**
-* RESTful API with 6 endpoints (GET/POST)
+* RESTful API with 5 endpoints (GET/POST)
 * React-based modern UI
-* 30+ comprehensive unit tests
-* Dependency injection architecture
 * Internationalization support
 * Complete API documentation in docs/API.md
 * Type hints for PHP 7.4+ compatibility
 
 **Documentation:**
-* 450+ line README.md
-* Complete API reference
-* 30+ unit test examples
+* Complete API reference (docs/API.md)
 * Technical architecture documentation
-* Security audit report
 
 
 == Upgrade Notice ==

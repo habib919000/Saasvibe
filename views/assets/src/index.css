@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Scoped layout styles for settings app */
+#saasvibe-app {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1e293b;
+}
+
+#saasvibe-app * {
+  box-sizing: border-box;
+}
+
+/* Mapping removed so brand color only applies strictly to sidebar and top bar */

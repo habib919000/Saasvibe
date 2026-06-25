@@ -1,6 +1,6 @@
 # SaasvibeWP - REST API Documentation
 
-Base URL: `/wp-json/saasvibewp/v1/`
+Base URL: `/wp-json/saasvibe/v1/`
 
 All endpoints require WordPress to be installed and REST API enabled.
 
@@ -21,11 +21,11 @@ X-WP-Nonce: [wordpress-nonce]
 Get the nonce from the WordPress admin via:
 
 ```javascript
-fetch('/wp-json/saasvibewp/v1/settings', {
+fetch('/wp-json/saasvibe/v1/settings', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-WP-Nonce': SaasMenu_Vars.permission, // Provided by plugin
+    'X-WP-Nonce': Saasvibe_Vars.permission, // Provided by plugin
   },
   body: JSON.stringify(settings),
 });
@@ -37,7 +37,7 @@ fetch('/wp-json/saasvibewp/v1/settings', {
 
 ### 1. GET /templates
 
-Fetch list of all available templates (free and pro).
+Fetch list of all available templates.
 
 **Authentication:** Not required (public endpoint)
 
@@ -59,16 +59,29 @@ Fetch list of all available templates (free and pro).
     }
   },
   {
-    "id": "stripe-crisp",
-    "name": "Stripe Crisp",
-    "style": "both",
-    "tier": "pro",
-    "designRef": "Stripe.com",
+    "id": "vercel-minimal",
+    "name": "Vercel Minimal",
+    "style": "sidebar",
+    "tier": "free",
+    "designRef": "Vercel.com",
     "defaultColors": {
       "background": "#FFFFFF",
-      "text": "#333333",
-      "accent": "#6772E5",
-      "hover": "#F6F9FC"
+      "text": "#000000",
+      "accent": "#000000",
+      "hover": "#F3F4F6"
+    }
+  },
+  {
+    "id": "classic-elevated",
+    "name": "Classic Elevated",
+    "style": "both",
+    "tier": "free",
+    "designRef": "WordPress",
+    "defaultColors": {
+      "background": "#154B75",
+      "text": "#FFFFFF",
+      "accent": "#2271B1",
+      "hover": "#1B5B8E"
     }
   }
 ]
@@ -238,8 +251,8 @@ Download current settings as JSON file.
 **Example using cURL:**
 
 ```bash
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-  https://example.com/wp-json/saasvibewp/v1/settings/export \
+curl -H "X-WP-Nonce: YOUR_NONCE" --cookie "wordpress_logged_in=..." \
+  https://example.com/wp-json/saasvibe/v1/settings/export \
   -o settings.json
 ```
 
@@ -267,7 +280,7 @@ Import settings from JSON file.
 
 ```json
 {
-  "content": "{\"templateId\":\"stripe-crisp\",\"brandColor\":\"#6772E5\", ...}"
+  "content": "{\"templateId\":\"vercel-minimal\",\"brandColor\":\"#6772E5\", ...}"
 }
 ```
 
@@ -310,48 +323,6 @@ Note: Send the JSON as a **string**, not parsed object.
 
 ---
 
-### 6. POST /preview/css
-
-Generate CSS preview for settings (for iframe preview feature).
-
-**Authentication:** Required (`manage_options`)
-
-**Headers:** Include `X-WP-Nonce` header
-
-**Request Body:**
-
-```json
-{
-  "templateId": "linear-dark",
-  "brandColor": "#5E6AD2",
-  "customLogo": "https://example.com/logo.png",
-  "density": "normal",
-  "topBarHeight": 46,
-  "sidebarWidth": 240,
-  ...
-}
-```
-
-**Response:** `200 OK`
-
-```json
-{
-  "css": ":root { --saasvibewp-brand-color: #5E6AD2; --saasvibewp-sidebar-width: 240px; --saasvibewp-top-bar-height: 46px; } #wpadminbar { height: var(--saasvibewp-top-bar-height); } ..."
-}
-```
-
-**Errors:**
-
-```json
-{
-  "code": "invalid_color",
-  "message": "Brand color must be valid hex format (#000000)",
-  "data": { "status": 400 }
-}
-```
-
----
-
 ## Settings Schema
 
 ### Required Fields
@@ -388,7 +359,7 @@ Generate CSS preview for settings (for iframe preview feature).
 | `templateId` | string | Must exist in templates list | `invalid_template` |
 | `brandColor` | hex | Format: `#ABC` or `#AABBCC` | `invalid_color` |
 | `customLogo` | URL | Must be valid URL or empty | `invalid_logo_url` |
-| `density` | string | `normal` \| `compact` | `invalid_density` |
+| `density` | string | `normal` \| `compact` \| `relaxed` | `invalid_density` |
 | `topBarHeight` | int | 30-200 | `invalid_top_bar_height` |
 | `sidebarWidth` | int | 150-400 | `invalid_sidebar_width` |
 
@@ -401,7 +372,7 @@ Currently no rate limiting. For high-traffic sites, implement rate limiting via:
 ```php
 // In permission callback
 $client_ip = $_SERVER['REMOTE_ADDR'];
-$key = 'saasvibewp_api_' . $client_ip;
+$key = 'saasvibe_api_' . $client_ip;
 $count = (int) get_transient( $key );
 
 if ( $count >= 10 ) {
@@ -418,7 +389,7 @@ set_transient( $key, $count + 1, MINUTE_IN_SECONDS );
 Settings are cached for 6 hours:
 
 ```
-Cache-Key: saasvibewp_settings_cache
+Cache-Key: saasvibe_settings_cache
 TTL: 6 hours (21600 seconds)
 ```
 
@@ -438,7 +409,6 @@ Cache is invalidated on `POST /settings` or `POST /settings/import`.
 | `invalid_json` | 400 | Malformed JSON in request |
 | `file_too_large` | 400 | Import file exceeds 1MB |
 | `save_failed` | 500 | Database save failed |
-| `preview_error` | 500 | CSS generation failed |
 
 ---
 
@@ -449,10 +419,9 @@ Cache is invalidated on `POST /settings` or `POST /settings/import`.
 **Get Settings:**
 
 ```javascript
-fetch('/wp-json/saasvibewp/v1/settings', {
+fetch('/wp-json/saasvibe/v1/settings', {
   headers: {
-    'Authorization': 'Bearer ' + SaasMenu_Vars.token,
-    'X-WP-Nonce': SaasMenu_Vars.permission,
+    'X-WP-Nonce': Saasvibe_Vars.permission,
   },
 })
   .then(r => r.json())
@@ -463,16 +432,16 @@ fetch('/wp-json/saasvibewp/v1/settings', {
 
 ```javascript
 const settings = {
-  templateId: 'stripe-crisp',
+  templateId: 'vercel-minimal',
   brandColor: '#6772E5',
   density: 'compact',
 };
 
-fetch('/wp-json/saasvibewp/v1/settings', {
+fetch('/wp-json/saasvibe/v1/settings', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-WP-Nonce': SaasMenu_Vars.permission,
+    'X-WP-Nonce': Saasvibe_Vars.permission,
   },
   body: JSON.stringify(settings),
 })
@@ -483,7 +452,7 @@ fetch('/wp-json/saasvibewp/v1/settings', {
 ### PHP (wp_remote_post)
 
 ```php
-$response = wp_remote_post( 'https://example.com/wp-json/saasvibewp/v1/settings', [
+$response = wp_remote_post( 'https://example.com/wp-json/saasvibe/v1/settings', [
     'body'    => json_encode( [ 'brandColor' => '#FF0000' ] ),
     'headers' => [
         'Content-Type' => 'application/json',
@@ -505,10 +474,10 @@ echo 'Success: ' . $data->message;
 ```bash
 # Get settings
 curl -H "X-WP-Nonce: YOUR_NONCE" \
-  https://example.com/wp-json/saasvibewp/v1/settings
+  https://example.com/wp-json/saasvibe/v1/settings
 
 # Save settings
-curl -X POST https://example.com/wp-json/saasvibewp/v1/settings \
+curl -X POST https://example.com/wp-json/saasvibe/v1/settings \
   -H "Content-Type: application/json" \
   -H "X-WP-Nonce: YOUR_NONCE" \
   -d '{"brandColor": "#FF0000"}'
@@ -518,9 +487,9 @@ curl -X POST https://example.com/wp-json/saasvibewp/v1/settings \
 
 ## Changelog
 
-### v2.0.0
+### v1.0.0
 - Initial REST API release
-- 6 endpoints
+- 5 endpoints
 - CSRF protection via nonce
 - Input validation and sanitization
 - Response caching (6 hours)

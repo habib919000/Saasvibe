@@ -110,6 +110,10 @@ try {
 
 function saasvibe_render_settings_page() {
     try {
+        // NOTE: the compiled React bundle mounts into #saasvibe-app and the
+        // settings stylesheet scopes every rule under #saasvibe-app. The id must
+        // stay "saasvibe-app" or the entire scoped style layer (typography, form
+        // controls, focus states, dark mode) silently fails to apply.
         echo '<div id="saasvibe-app"></div>';
         echo '<div id="saasvibe-portal-root"></div>';
     } catch ( Exception $e ) {
@@ -134,13 +138,13 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
         // Enqueue WP Media Library helper scripts
         wp_enqueue_media();
 
-        $js_url = SAASVIBE_URL . 'views/assets/dist/saasmenu.js';
-        $css_url = SAASVIBE_URL . 'views/assets/dist/saasmenu.css';
+        $js_url = SAASVIBE_URL . 'views/assets/dist/saasvibe.js';
+        $css_url = SAASVIBE_URL . 'views/assets/dist/saasvibe.css';
 
         // Check if files exist (optional, for debugging)
         if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-            $js_file = SAASVIBE_PATH . 'views/assets/dist/saasmenu.js';
-            $css_file = SAASVIBE_PATH . 'views/assets/dist/saasmenu.css';
+            $js_file = SAASVIBE_PATH . 'views/assets/dist/saasvibe.js';
+            $css_file = SAASVIBE_PATH . 'views/assets/dist/saasvibe.css';
             
             if ( ! file_exists( $js_file ) ) {
                 Saasvibe_Logger::warning( "JS file not found: $js_file" );
@@ -150,12 +154,21 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
             }
         }
 
+        // Load the webpack-generated dependency + version manifest so the script
+        // declares exactly the handles it was built against (react, react-dom,
+        // wp-element, wp-i18n) and gets a content-hash cache-buster. Fall back to
+        // sensible defaults if the asset file is ever missing.
+        $asset_file = SAASVIBE_PATH . 'views/assets/dist/saasvibe.asset.php';
+        $asset      = file_exists( $asset_file )
+            ? require $asset_file
+            : [ 'dependencies' => [ 'wp-element', 'wp-i18n' ], 'version' => SAASVIBE_VERSION ];
+
         // Enqueue JavaScript
         wp_enqueue_script(
             'saasvibe-admin',
             $js_url,
-            [ 'wp-element', 'wp-i18n' ],
-            SAASVIBE_VERSION,
+            $asset['dependencies'],
+            $asset['version'],
             true
         );
 
@@ -192,12 +205,18 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
 
             Saasvibe_Logger::debug( 'Loaded ' . count( $roles_list ) . ' roles' );
 
-            // Gather menu items list
+            // Gather menu items list. Prefer the pristine snapshot captured before
+            // role-based hiding ran (priority 1 admin_menu hook) so the matrix always
+            // lists every menu item — otherwise a menu hidden for the current user's
+            // role would drop out of this list and become impossible to re-enable.
             global $menu;
+            $menu_source = ! empty( $GLOBALS['saasvibe_menu_snapshot'] )
+                ? $GLOBALS['saasvibe_menu_snapshot']
+                : (array) $menu;
             $menu_list = [];
-            
-            if ( ! empty( $menu ) ) {
-                foreach ( $menu as $item ) {
+
+            if ( ! empty( $menu_source ) ) {
+                foreach ( $menu_source as $item ) {
                     if ( empty( $item[0] ) ) {
                         continue;
                     }
@@ -225,15 +244,35 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
                 $templates = [];
             }
 
+            // Get WordPress admin color scheme primary accent color
+            global $_wp_admin_css_colors;
+            $admin_color = get_user_option( 'admin_color' );
+            if ( empty( $admin_color ) ) {
+                $admin_color = 'fresh';
+            }
+            $wp_brand_color = '#2271b1'; // default Fresh blue fallback
+            if ( ! empty( $_wp_admin_css_colors[ $admin_color ]->colors ) ) {
+                $colors = $_wp_admin_css_colors[ $admin_color ]->colors;
+                if ( isset( $colors[2] ) ) {
+                    $wp_brand_color = $colors[2];
+                } elseif ( isset( $colors[3] ) ) {
+                    $wp_brand_color = $colors[3];
+                } elseif ( isset( $colors[0] ) ) {
+                    $wp_brand_color = $colors[0];
+                }
+            }
+
             // Localize React App variables
             $saasvibe_vars = [
                 'rest_url'   => esc_url_raw( rest_url( 'saasvibe/v1/' ) ),
                 'permission' => wp_create_nonce( 'wp_rest' ),
                 'is_admin'   => current_user_can( 'manage_options' ),
+                'version'    => SAASVIBE_VERSION,
                 'settings'   => $settings,
                 'templates'  => $templates,
                 'roles'      => $roles_list,
                 'menuItems'  => $menu_list,
+                'wp_brand_color' => $wp_brand_color,
                 'language'   => [
                     'locale_data' => [
                         'saasvibe' => [
@@ -246,9 +285,7 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
                 ],
             ];
 
-            // The bundle references both globals (incomplete rebrand). Expose
-            // the same payload under each name so every chunk resolves.
-            wp_localize_script( 'saasvibe-admin', 'SaasMenu_Vars', $saasvibe_vars );
+            // The compiled bundle reads its data from window.Saasvibe_Vars.
             wp_localize_script( 'saasvibe-admin', 'Saasvibe_Vars', $saasvibe_vars );
 
             Saasvibe_Logger::debug( 'Settings localized for React app' );
@@ -262,7 +299,6 @@ add_action( 'admin_enqueue_scripts', function( $hook ) {
                 'permission' => wp_create_nonce( 'wp_rest' ),
                 'error'      => 'Failed to load settings. Check server logs.',
             ];
-            wp_localize_script( 'saasvibe-admin', 'SaasMenu_Vars', $saasvibe_vars );
             wp_localize_script( 'saasvibe-admin', 'Saasvibe_Vars', $saasvibe_vars );
         }
 
@@ -298,25 +334,6 @@ add_action( 'admin_enqueue_scripts', function() {
             return;
         }
 
-        // Role visibility: empty == show to everyone. Otherwise only apply
-        // when one of the current user's roles is enabled. Supports both a
-        // list of role keys and a { role: bool } map.
-        $role_visibility = $settings['roleVisibility'] ?? [];
-        if ( ! empty( $role_visibility ) ) {
-            $user    = wp_get_current_user();
-            $allowed = false;
-            foreach ( (array) $user->roles as $role ) {
-                if ( in_array( $role, $role_visibility, true )
-                    || ( isset( $role_visibility[ $role ] ) && $role_visibility[ $role ] ) ) {
-                    $allowed = true;
-                    break;
-                }
-            }
-            if ( ! $allowed ) {
-                return;
-            }
-        }
-
         // Resolve template stylesheet (guard against path traversal).
         $safe_id   = sanitize_file_name( $template_id );
         $css_path  = SAASVIBE_PATH . 'assets/css/templates/' . $safe_id . '.css';
@@ -332,26 +349,79 @@ add_action( 'admin_enqueue_scripts', function() {
             SAASVIBE_VERSION
         );
 
+        // Get WordPress admin color scheme primary accent color
+        global $_wp_admin_css_colors;
+        $admin_color = get_user_option( 'admin_color' );
+        if ( empty( $admin_color ) ) {
+            $admin_color = 'fresh';
+        }
+        $wp_brand_color = '#2271b1'; // default Fresh blue fallback
+        if ( ! empty( $_wp_admin_css_colors[ $admin_color ]->colors ) ) {
+            $colors = $_wp_admin_css_colors[ $admin_color ]->colors;
+            if ( isset( $colors[2] ) ) {
+                $wp_brand_color = $colors[2];
+            } elseif ( isset( $colors[3] ) ) {
+                $wp_brand_color = $colors[3];
+            } elseif ( isset( $colors[0] ) ) {
+                $wp_brand_color = $colors[0];
+            }
+        }
+
         // Inject user-driven custom properties. Brand hover/text colors are
         // left to each template's own fallbacks so light/dark themes stay legible.
-        $brand   = $settings['brandColor'] ?? '#5E6AD2';
+        $brand   = $settings['brandColor'] ?? '';
+        $hover   = '';
+        if ( empty( $brand ) ) {
+            $template_controller = new \Saasvibe\Controllers\Template_Controller();
+            $templates = $template_controller->get_templates_list();
+            foreach ( $templates as $t ) {
+                if ( $t['id'] === $template_id ) {
+                    $brand = $t['defaultColors']['accent'] ?? '';
+                    $hover = $t['defaultColors']['hover'] ?? '';
+                    break;
+                }
+            }
+            if ( empty( $brand ) ) {
+                $brand = $wp_brand_color;
+            }
+        }
         $sidebar = (int) ( $settings['sidebarWidth'] ?? 240 );
         $topbar  = (int) ( $settings['topBarHeight'] ?? 46 );
-        $compact = ( ( $settings['density'] ?? 'normal' ) === 'compact' );
+        $density = $settings['density'] ?? 'normal';
 
-        $pad      = $compact ? '6px 10px' : '8px 12px';
-        $pad_left = $compact ? '10px' : '12px';
+        // Density drives menu-item padding. 'relaxed' is now a first-class option
+        // (the settings UI offers Normal / Compact / Relaxed).
+        switch ( $density ) {
+            case 'compact':
+                $pad      = '6px 10px';
+                $pad_left = '10px';
+                break;
+            case 'relaxed':
+                $pad      = '12px 16px';
+                $pad_left = '16px';
+                break;
+            default: // normal
+                $pad      = '8px 12px';
+                $pad_left = '12px';
+                break;
+        }
 
-        $brand    = sanitize_text_field( $brand );
+        // Re-validate the brand color at output time (defense in depth). The save/
+        // import paths already hex-validate, but never trust the stored option in a
+        // raw CSS context: an invalid value falls back to the default.
+        $brand = sanitize_text_field( $brand );
+        if ( ! preg_match( '/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $brand ) ) {
+            $brand = $wp_brand_color;
+        }
 
         // Derive brand hover tint + contrast text color so the preview's
         // brand-driven highlights are reproduced 1:1 in the real admin.
         $rgb        = saasvibe_hex_to_rgb( $brand );
-        $brand_hover = sprintf( 'rgba(%d,%d,%d,0.10)', $rgb['r'], $rgb['g'], $rgb['b'] );
+        $brand_hover = ! empty( $hover ) ? $hover : sprintf( 'rgba(%d,%d,%d,0.10)', $rgb['r'], $rgb['g'], $rgb['b'] );
         $brand_text  = saasvibe_contrast_color( $rgb );
 
         $vars = sprintf(
-            ':root{--saasmenu-brand-color:%s;--saasmenu-brand-hover-color:%s;--saasmenu-brand-text-color:%s;--saasmenu-sidebar-width:%dpx;--saasmenu-topbar-height:%dpx;--saasmenu-menu-item-padding:%s;--saasmenu-menu-item-padding-left:%s;}',
+            ':root{--saasvibe-brand-color:%s;--saasvibe-brand-hover-color:%s;--saasvibe-brand-text-color:%s;--saasvibe-sidebar-width:%dpx;--saasvibe-topbar-height:%dpx;--saasvibe-menu-item-padding:%s;--saasvibe-menu-item-padding-left:%s;}',
             $brand,
             $brand_hover,
             $brand_text,
@@ -409,9 +479,12 @@ if ( ! function_exists( 'saasvibe_contrast_color' ) ) {
 }
 
 /**
- * Resolve the active settings for the current admin user, or null when the
- * plugin should not apply (no template, or hidden by role visibility).
- * Centralizes the gating shared by every chrome hook.
+ * Resolve the active settings, or null when the plugin should not apply (no
+ * template selected). Centralizes the guard shared by every chrome hook.
+ *
+ * NOTE: roleVisibility is NOT a styling gate. It controls per-role admin-menu
+ * hiding (see saasvibe_apply_role_menu_visibility()). The template styling
+ * applies to every admin user once a template is selected.
  */
 if ( ! function_exists( 'saasvibe_get_applied_settings' ) ) {
     function saasvibe_get_applied_settings() {
@@ -421,29 +494,81 @@ if ( ! function_exists( 'saasvibe_get_applied_settings' ) ) {
             return null;
         }
 
-        $role_visibility = $settings['roleVisibility'] ?? [];
-        if ( ! empty( $role_visibility ) ) {
-            $user    = wp_get_current_user();
-            $allowed = false;
-            foreach ( (array) $user->roles as $role ) {
-                if ( in_array( $role, $role_visibility, true )
-                    || ( isset( $role_visibility[ $role ] ) && $role_visibility[ $role ] ) ) {
-                    $allowed = true;
-                    break;
-                }
-            }
-            if ( ! $allowed ) {
-                return null;
-            }
-        }
-
         return $settings;
     }
 }
 
+/**
+ * Snapshot the full admin menu BEFORE any role-based hiding runs (priority 1,
+ * which fires before the removal hook at priority 999). The settings UI builds
+ * its Role Visibility matrix from this snapshot so every menu item stays listed
+ * even after some are hidden for the current user's role — otherwise a hidden
+ * item would drop off the matrix and could never be re-enabled.
+ */
+add_action( 'admin_menu', function() {
+    global $menu;
+    $GLOBALS['saasvibe_menu_snapshot'] = is_array( $menu ) ? $menu : [];
+}, 1 );
+
+/**
+ * Role-based menu visibility.
+ *
+ * The Role Visibility matrix stores roleVisibility[ roleKey ][ menuItemId ] = true
+ * to mean "hide this top-level menu for this role". The stored menuItemId matches
+ * the id the settings UI was given (the menu's HTML id, e.g. "menu-comments", or a
+ * "menu-{slug}" fallback), so we rebuild the same id => menu-slug map from the live
+ * $menu and remove any flagged items for the current user's roles.
+ */
+add_action( 'admin_menu', function() {
+    $settings = get_option( 'saasvibe_settings', [] );
+    $role_vis = $settings['roleVisibility'] ?? [];
+    if ( empty( $role_vis ) || ! is_array( $role_vis ) ) {
+        return;
+    }
+
+    $user = wp_get_current_user();
+    if ( empty( $user->roles ) ) {
+        return;
+    }
+
+    // Build id => menu_slug map from the current admin menu.
+    global $menu;
+    $id_to_slug = [];
+    if ( ! empty( $menu ) ) {
+        foreach ( $menu as $item ) {
+            if ( empty( $item[0] ) ) {
+                continue;
+            }
+            $slug       = $item[2];
+            $clean_slug = sanitize_title( $slug );
+            $id         = ! empty( $item[5] ) ? $item[5] : ( 'menu-' . $clean_slug );
+            $id_to_slug[ $id ] = $slug;
+        }
+    }
+
+    // Collect the menu ids hidden for any of the current user's roles.
+    $hidden_ids = [];
+    foreach ( (array) $user->roles as $role ) {
+        if ( empty( $role_vis[ $role ] ) || ! is_array( $role_vis[ $role ] ) ) {
+            continue;
+        }
+        foreach ( $role_vis[ $role ] as $item_id => $is_hidden ) {
+            if ( $is_hidden ) {
+                $hidden_ids[ $item_id ] = true;
+            }
+        }
+    }
+
+    foreach ( array_keys( $hidden_ids ) as $item_id ) {
+        if ( isset( $id_to_slug[ $item_id ] ) ) {
+            remove_menu_page( $id_to_slug[ $item_id ] );
+        }
+    }
+}, 999 );
+
 // --- Custom sidebar logo ----------------------------------------------------
 // WP has no native sidebar header, so inject a logo container at the top of
-// #adminmenu. The template stylesheets already style .saasmenu-sidebar-logo-container.
+// #adminmenu. The template stylesheets already style .saasvibe-sidebar-logo-container.
 add_action( 'admin_enqueue_scripts', function() {
     $settings = saasvibe_get_applied_settings();
     if ( null === $settings ) {
@@ -456,11 +581,15 @@ add_action( 'admin_enqueue_scripts', function() {
     }
 
     $js = sprintf(
-        '(function(){var m=document.getElementById("adminmenu");if(!m||document.querySelector(".saasmenu-sidebar-logo-container"))return;'
-        . 'var li=document.createElement("li");li.className="saasmenu-sidebar-logo-container";'
-        . 'var i=document.createElement("img");i.src=%s;i.alt="Logo";li.appendChild(i);'
+        '(function(){var m=document.getElementById("adminmenu");if(!m||document.querySelector(".saasvibe-sidebar-logo-container"))return;'
+        . 'var li=document.createElement("li");li.className="saasvibe-sidebar-logo-container";'
+        . 'var i=document.createElement("img");i.src=%1$s;i.alt=%2$s;li.appendChild(i);'
         . 'm.insertBefore(li,m.firstChild);})();',
-        wp_json_encode( esc_url( $logo ) )
+        wp_json_encode( esc_url( $logo ) ),
+        wp_json_encode(
+            /* translators: %s: site name, used as the sidebar logo alt text. */
+            sprintf( __( '%s logo', 'saasvibe' ), get_bloginfo( 'name' ) )
+        )
     );
 
     // 'common' is enqueued on every admin page.
@@ -518,12 +647,17 @@ add_action( 'admin_enqueue_scripts', function() {
         $color = '#5E6AD2';
     }
 
+    // Pick black or white text for legibility against the chosen badge color so a
+    // light badge (e.g. #FFEB3B) doesn't render white-on-light and fail contrast.
+    $text_color = saasvibe_contrast_color( saasvibe_hex_to_rgb( $color ) );
+
     $css = sprintf(
-        '#wpadminbar .saasvibe-env-badge{display:inline-block;background:%s;color:#fff;'
+        '#wpadminbar .saasvibe-env-badge{display:inline-block;background:%1$s;color:%2$s;'
         . 'font-size:11px;font-weight:600;line-height:1.6;padding:0 10px;border-radius:9999px;'
         . 'letter-spacing:.02em;}'
         . '#wpadminbar #wp-admin-bar-saasvibe-env-badge .ab-item{background:transparent !important;}',
-        $color
+        $color,
+        $text_color
     );
 
     // Attach to our template stylesheet when present, else to the admin bar style.
@@ -533,6 +667,55 @@ add_action( 'admin_enqueue_scripts', function() {
         wp_add_inline_style( 'admin-bar', $css );
     }
 }, 21 );
+
+// --- Modern Icons Injection ----------------------------------------------------
+add_action( 'admin_enqueue_scripts', function() {
+    $settings = saasvibe_get_applied_settings();
+    if ( null === $settings ) {
+        return;
+    }
+    
+    $modern_icons = $settings['modernIcons'] ?? [];
+    if ( empty( $modern_icons['enabled'] ) ) {
+        return;
+    }
+
+    // Pass configuration to JS
+    $style = $modern_icons['style'] ?? 'line';
+    wp_add_inline_script(
+        'common',
+        'window.SaasvibeModernIcons = ' . wp_json_encode( [ 'style' => $style ] ) . ';',
+        'before'
+    );
+
+    // Provide the CSS rule to hide original dashicon font on replaced elements
+    $css = '.saasvibe-lucide-replaced::before { display: none !important; } '
+         . '.saasvibe-lucide-replaced { display: flex !important; align-items: center; justify-content: center; }';
+    
+    if ( wp_style_is( 'saasvibe-template', 'enqueued' ) ) {
+        wp_add_inline_style( 'saasvibe-template', $css );
+    } else {
+        wp_add_inline_style( 'admin-bar', $css );
+    }
+
+    // Enqueue Lucide library from CDN and our mapping script
+    // Note: If WP.org objects to the CDN, it can be bundled locally in a future update
+    wp_enqueue_script(
+        'saasvibe-lucide',
+        'https://unpkg.com/lucide@latest',
+        [],
+        null,
+        true
+    );
+
+    wp_enqueue_script(
+        'saasvibe-modern-icons',
+        SAASVIBE_URL . 'assets/js/modern-icons.js',
+        [ 'saasvibe-lucide' ],
+        SAASVIBE_VERSION,
+        true
+    );
+}, 22 );
 
 // ============================================
 // 6. Global Error Handler

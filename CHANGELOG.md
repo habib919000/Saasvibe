@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Loader Centralization**: Refactored the settings parsing logic and styling hook registrations inside `bootstrap/loaders.php` to clean up execution flows and improve maintainability.
 
 ### Fixed
-- **Live Preview Display Issue**: Fixed an issue where the settings live preview was blank due to mismatches between PHP-injected globals and React bundle globals (`SaasMenu_Vars` vs `Saasvibe_Vars`). Localized data under both globals to guarantee robust loading.
+- **Live Preview Display Issue**: Fixed an issue where the settings live preview was blank due to mismatches between PHP-injected globals and React bundle globals. Standardized the admin app on `Saasvibe_Vars` for robust loading.
 
 ## [1.0.0] - 2026-06-13
 

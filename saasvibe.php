@@ -3,11 +3,11 @@
  * Plugin Name:       Saasvibe
  * Plugin URI:        https://github.com/habib919000/saasvibe
  * Description:       Transform your WordPress dashboard with beautiful design templates, brand customization, and role-based access control. Enterprise-grade security with WCAG accessibility.
- * Version:           1.0.0
+ * Version:           2.0.1
  * Requires at least: 5.8
  * Requires PHP:      7.4
- * Author:            WeDevs Info
- * Author URI:        https://wedevsinfo.com
+ * Author:            habib919000
+ * Author URI:        https://uxhabib.framer.website
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       saasvibe
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'SAASVIBE_VERSION', '1.0.0' );
+define( 'SAASVIBE_VERSION', '2.0.1' );
 define( 'SAASVIBE_FILE', __FILE__ );
 define( 'SAASVIBE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SAASVIBE_URL', plugin_dir_url( __FILE__ ) );
@@ -50,7 +50,7 @@ function saasvibe_activate_plugin() {
     // Set default settings if not already present
     $default_settings = [
         'templateId'         => 'linear-dark',
-        'brandColor'         => '#5E6AD2',
+        'brandColor'         => '',
         'density'            => 'normal',
         'customLogo'         => '',
         'topBarHeight'       => 46,
@@ -68,6 +68,10 @@ function saasvibe_activate_plugin() {
             'howdy'         => false,
         ],
         'roleVisibility'     => [],
+        'modernIcons'        => [
+            'enabled' => false,
+            'style'   => 'line',
+        ],
         'wizard_completed'   => false,
     ];
 

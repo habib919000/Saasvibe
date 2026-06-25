@@ -16,7 +16,7 @@
     "menu",
     "navigation"
   ],
-  "author": "SaaS Menu Team",
+  "author": "Saasvibe Team",
   "license": "GPL-2.0-or-later",
   "devDependencies": {
     "@babel/preset-react": "^7.24.1",

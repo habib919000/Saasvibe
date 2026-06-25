@@ -3,13 +3,13 @@
 /* 1. Global Dimensions & Variables Layout Override */
 #adminmenuback,
 #adminmenuwrap {
-    width: var(--saasmenu-sidebar-width, 240px) !important;
+    width: var(--saasvibe-sidebar-width, 240px) !important;
     background-color: #FFFFFF !important;
 }
 
 #wpcontent,
 #wpfooter {
-    margin-left: var(--saasmenu-sidebar-width, 240px) !important;
+    margin-left: var(--saasvibe-sidebar-width, 240px) !important;
 }
 
 /* Collapsed sidebar compatibility */
@@ -25,19 +25,19 @@
 
 /* Top bar Height Override */
 #wpadminbar {
-    height: var(--saasmenu-topbar-height, 46px) !important;
-    min-height: var(--saasmenu-topbar-height, 46px) !important;
+    height: var(--saasvibe-topbar-height, 46px) !important;
+    min-height: var(--saasvibe-topbar-height, 46px) !important;
     background: #FFFFFF !important;
     border-bottom: 1px solid #E5E7EB !important;
     box-sizing: border-box;
 }
 
 body.admin-bar #wpbody {
-    padding-top: var(--saasmenu-topbar-height, 46px) !important;
+    padding-top: var(--saasvibe-topbar-height, 46px) !important;
 }
 
 html.wp-toolbar {
-    padding-top: var(--saasmenu-topbar-height, 46px) !important;
+    padding-top: var(--saasvibe-topbar-height, 46px) !important;
 }
 
 /* 2. Top Bar (#wpadminbar) Styling */
@@ -67,13 +67,13 @@ html.wp-toolbar {
 #wpadminbar .ab-item:hover .dashicons::before,
 #wpadminbar .ab-item:hover .dashicons-before,
 #wpadminbar .ab-item:hover .dashicons-before::before {
-    color: var(--saasmenu-brand-color, #000000) !important;
+    color: var(--saasvibe-brand-color, #000000) !important;
 }
 
 #wpadminbar .ab-item,
 #wpadminbar .ab-empty-item {
-    height: var(--saasmenu-topbar-height, 46px) !important;
-    line-height: var(--saasmenu-topbar-height, 46px) !important;
+    height: var(--saasvibe-topbar-height, 46px) !important;
+    line-height: var(--saasvibe-topbar-height, 46px) !important;
 }
 
 #wpadminbar #wp-admin-bar-root-default > li:hover > .ab-item,
@@ -89,7 +89,7 @@ html.wp-toolbar {
 }
 
 #wpadminbar .ab-submenu .ab-item:hover {
-    color: var(--saasmenu-brand-color, #000000) !important;
+    color: var(--saasvibe-brand-color, #000000) !important;
     background-color: #F3F4F6 !important;
 }
 
@@ -110,23 +110,32 @@ html.wp-toolbar {
     color: #666666 !important;
     font-weight: 500 !important;
     border-radius: 4px !important;
-    padding: var(--saasmenu-menu-item-padding, 8px 12px) !important;
+    padding: var(--saasvibe-menu-item-padding, 8px 12px) !important;
     transition: all 120ms ease-in-out !important;
 }
 
+#adminmenu li.menu-top:hover,
+#adminmenu li.opensub,
+#adminmenu li.wp-has-current-submenu,
+#adminmenu li.current {
+    background-color: transparent !important;
+}
+
 #adminmenu a.menu-top:hover,
+#adminmenu li.menu-top:hover a.menu-top,
+#adminmenu li.opensub a.menu-top,
 #adminmenu li.wp-has-current-submenu a.menu-top,
 #adminmenu li.current a.menu-top {
     color: #000000 !important;
-    background-color: var(--saasmenu-brand-hover-color, rgba(0, 0, 0, 0.05)) !important;
+    background-color: var(--saasvibe-brand-hover-color, rgba(0, 0, 0, 0.05)) !important;
 }
 
 /* Selected menu item highlight */
 #adminmenu li.wp-has-current-submenu.wp-menu-open,
 #adminmenu li.wp-has-current-submenu a.menu-top,
 #adminmenu li.current a.menu-top {
-    border-left: 3px solid var(--saasmenu-brand-color, #000000) !important;
-    padding-left: calc(var(--saasmenu-menu-item-padding-left, 12px) - 3px) !important;
+    border-left: 3px solid var(--saasvibe-brand-color, #000000) !important;
+    padding-left: calc(var(--saasvibe-menu-item-padding-left, 12px) - 3px) !important;
     font-weight: 600 !important;
 }
 
@@ -152,7 +161,7 @@ html.wp-toolbar {
 }
 
 #adminmenu .wp-submenu li.current a {
-    color: var(--saasmenu-brand-color, #000000) !important;
+    color: var(--saasvibe-brand-color, #000000) !important;
     font-weight: 600 !important;
 }
 
@@ -176,7 +185,7 @@ html.wp-toolbar {
 
 #adminmenu li:hover div.wp-menu-image::before,
 #adminmenu li.wp-has-current-submenu div.wp-menu-image::before {
-    color: var(--saasmenu-brand-color, #000000) !important;
+    color: var(--saasvibe-brand-color, #000000) !important;
 }
 
 /* Collapse toggle button restyle */
@@ -191,8 +200,8 @@ html.wp-toolbar {
 }
 
 /* Custom logo styling inside sidebar */
-.saasmenu-sidebar-logo-container {
-    height: var(--saasmenu-topbar-height, 46px) !important;
+.saasvibe-sidebar-logo-container {
+    height: var(--saasvibe-topbar-height, 46px) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -201,11 +210,19 @@ html.wp-toolbar {
     margin-bottom: 10px !important;
 }
 
-.folded .saasmenu-sidebar-logo-container {
+.saasvibe-sidebar-logo-container img {
+    max-width: 100% !important;
+    max-height: calc(var(--saasvibe-topbar-height, 46px) - 16px) !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+}
+
+.folded .saasvibe-sidebar-logo-container {
     padding: 8px !important;
 }
 
-.folded .saasmenu-sidebar-logo-container img {
+.folded .saasvibe-sidebar-logo-container img {
     max-height: 24px !important;
 }
 
@@ -213,13 +230,60 @@ html.wp-toolbar {
 #adminmenu a.menu-top:focus-visible,
 #adminmenu .wp-submenu a:focus-visible,
 #collapse-button:focus-visible {
-    outline: 2px solid var(--saasmenu-brand-color, #000000) !important;
+    outline: 2px solid var(--saasvibe-brand-color, #000000) !important;
     outline-offset: -2px !important;
-    background-color: var(--saasmenu-brand-hover-color, rgba(0, 0, 0, 0.05)) !important;
+    background-color: var(--saasvibe-brand-hover-color, rgba(0, 0, 0, 0.05)) !important;
 }
 
 #wpadminbar .ab-item:focus-visible,
 #wpadminbar a:focus-visible {
-    outline: 2px solid var(--saasmenu-brand-color, #000000) !important;
+    outline: 2px solid var(--saasvibe-brand-color, #000000) !important;
     outline-offset: -2px !important;
+}
+
+/* ============================================================
+ * Responsive guard (added v1.0.0)
+ * The fixed sidebar width / top-bar height overrides above use
+ * !important and would otherwise defeat WordPress's native
+ * responsive admin (auto-fold at <=960px, off-canvas overlay at
+ * <=782px). Below those breakpoints we hand control back to core
+ * so the menu collapse toggle and mobile layout keep working.
+ * ============================================================ */
+@media screen and (max-width: 960px) {
+    .auto-fold #adminmenuback,
+    .auto-fold #adminmenuwrap {
+        width: 36px !important;
+    }
+    .auto-fold #wpcontent,
+    .auto-fold #wpfooter {
+        margin-left: 36px !important;
+    }
+}
+
+@media screen and (max-width: 782px) {
+    #adminmenuback,
+    #adminmenuwrap,
+    .auto-fold #adminmenuback,
+    .auto-fold #adminmenuwrap {
+        width: 190px !important;
+        margin-left: -190px !important;
+    }
+    #wpcontent,
+    #wpfooter,
+    .auto-fold #wpcontent,
+    .auto-fold #wpfooter {
+        margin-left: 0 !important;
+    }
+    .wp-responsive-open #wpcontent,
+    .wp-responsive-open #wpfooter {
+        margin-left: 190px !important;
+    }
+    #wpadminbar {
+        height: 46px !important;
+        min-height: 46px !important;
+        position: fixed !important;
+    }
+    body.admin-bar #wpbody {
+        padding-top: 46px !important;
+    }
 }

@@ -128,34 +128,4 @@ add_action( 'rest_api_init', function() {
             return true;
         },
     ] );
-
-    // ============================================
-    // POST /preview/css — Generate CSS for preview frame
-    // ============================================
-    register_rest_route( 'saasvibe/v1', '/preview/css', [
-        'methods'             => 'POST',
-        'callback'            => [ $controller, 'preview_css' ],
-        'permission_callback' => function( $request ) {
-            // Verify nonce (CSRF protection)
-            $nonce = $request->get_header( 'X-WP-Nonce' );
-            if ( ! $nonce || ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
-                return new WP_Error(
-                    'rest_csrf_failure',
-                    __( 'Invalid security token. Please reload the page and try again.', 'saasvibe' ),
-                    [ 'status' => 403 ]
-                );
-            }
-            
-            // Verify user capability
-            if ( ! current_user_can( 'manage_options' ) ) {
-                return new WP_Error(
-                    'rest_forbidden',
-                    __( 'You do not have permission to preview settings.', 'saasvibe' ),
-                    [ 'status' => 403 ]
-                );
-            }
-            
-            return true;
-        },
-    ] );
 } );

@@ -58,6 +58,19 @@ class Template_Controller {
                     'hover'      => '#1B5B8E',
                 ],
             ],
+            [
+                'id'            => 'wedevs-dark',
+                'name'          => __( 'weDevs Dark', 'saasvibe' ),
+                'style'         => 'sidebar',
+                'tier'          => 'free',
+                'designRef'     => 'weDevs',
+                'defaultColors' => [
+                    'background' => '#000000',
+                    'text'       => '#FFFFFF',
+                    'accent'     => '#FF5858',
+                    'hover'      => 'rgba(255, 88, 88, 0.2)',
+                ],
+            ],
         ];
     }
 
@@ -130,6 +143,7 @@ class Template_Controller {
             return rest_ensure_response( [
                 'success' => true,
                 'message' => __( 'Settings saved successfully', 'saasvibe' ),
+                'data'    => $validated,
             ] );
         } catch ( \Exception $e ) {
             return new \WP_Error(
@@ -235,40 +249,6 @@ class Template_Controller {
     }
 
     /**
-     * REST API: Generate preview CSS
-     *
-     * @param \WP_REST_Request $request
-     * @return \WP_REST_Response|\WP_Error
-     */
-    public function preview_css( \WP_REST_Request $request ) {
-        try {
-            $params = $request->get_json_params();
-            
-            // Validate settings
-            $validated = $this->validate_and_sanitize_settings( $params );
-            
-            if ( is_wp_error( $validated ) ) {
-                return $validated;
-            }
-            
-            // Generate CSS (simplified for preview)
-            $css = $this->generate_css_from_settings( $validated );
-            
-            return new \WP_REST_Response(
-                [ 'css' => $css ],
-                200,
-                [ 'Content-Type' => 'application/json' ]
-            );
-        } catch ( \Exception $e ) {
-            return new \WP_Error(
-                'preview_error',
-                $e->getMessage(),
-                [ 'status' => 500 ]
-            );
-        }
-    }
-
-    /**
      * Validate and sanitize settings
      *
      * @param array $settings Raw settings from request
@@ -290,15 +270,19 @@ class Template_Controller {
         $validated['templateId'] = sanitize_text_field( $template_id );
         
         // Validate brand color
-        $brand_color = $settings['brandColor'] ?? '#5E6AD2';
-        if ( ! $this->validate_hex_color( $brand_color ) ) {
-            return new \WP_Error(
-                'invalid_color',
-                __( 'Brand color must be valid hex format (#000000)', 'saasvibe' ),
-                [ 'status' => 400 ]
-            );
+        $brand_color = $settings['brandColor'] ?? '';
+        if ( ! empty( $brand_color ) ) {
+            if ( ! $this->validate_hex_color( $brand_color ) ) {
+                return new \WP_Error(
+                    'invalid_color',
+                    __( 'Brand color must be valid hex format (#000000)', 'saasvibe' ),
+                    [ 'status' => 400 ]
+                );
+            }
+            $validated['brandColor'] = sanitize_text_field( $brand_color );
+        } else {
+            $validated['brandColor'] = '';
         }
-        $validated['brandColor'] = sanitize_text_field( $brand_color );
         
         // Validate custom logo URL
         $custom_logo = $settings['customLogo'] ?? '';
@@ -317,10 +301,10 @@ class Template_Controller {
         
         // Validate density
         $density = $settings['density'] ?? 'normal';
-        if ( ! in_array( $density, [ 'normal', 'compact' ], true ) ) {
+        if ( ! in_array( $density, [ 'normal', 'compact', 'relaxed' ], true ) ) {
             return new \WP_Error(
                 'invalid_density',
-                __( 'Density must be "normal" or "compact"', 'saasvibe' ),
+                __( 'Density must be "normal", "compact", or "relaxed"', 'saasvibe' ),
                 [ 'status' => 400 ]
             );
         }
@@ -366,13 +350,43 @@ class Template_Controller {
             'howdy'       => (bool) ( $hide_items['howdy'] ?? false ),
         ];
         
-        // Validate role visibility
+        // Validate role visibility.
+        //
+        // The UI sends a nested map: roleVisibility[ roleKey ][ menuItemId ] = bool,
+        // where true means "hide this menu item for this role". Preserve that shape
+        // exactly (the previous flat array_map() collapsed each role's item map to a
+        // single boolean and destroyed the per-item selections).
         $role_visibility = $settings['roleVisibility'] ?? [];
+        $clean_role_visibility = [];
         if ( is_array( $role_visibility ) ) {
-            $validated['roleVisibility'] = array_map( 'rest_sanitize_boolean', $role_visibility );
-        } else {
-            $validated['roleVisibility'] = [];
+            foreach ( $role_visibility as $role_key => $items ) {
+                $role_key = sanitize_key( $role_key );
+                if ( '' === $role_key ) {
+                    continue;
+                }
+                if ( is_array( $items ) ) {
+                    $clean_items = [];
+                    foreach ( $items as $item_id => $hidden ) {
+                        $item_id = sanitize_text_field( (string) $item_id );
+                        if ( '' === $item_id ) {
+                            continue;
+                        }
+                        $clean_items[ $item_id ] = rest_sanitize_boolean( $hidden );
+                    }
+                    if ( ! empty( $clean_items ) ) {
+                        $clean_role_visibility[ $role_key ] = $clean_items;
+                    }
+                }
+            }
         }
+        $validated['roleVisibility'] = $clean_role_visibility;
+
+        // Validate modern icons
+        $modern_icons = $settings['modernIcons'] ?? [];
+        $validated['modernIcons'] = [
+            'enabled' => (bool) ( $modern_icons['enabled'] ?? false ),
+            'style'   => in_array( $modern_icons['style'] ?? 'line', [ 'line', 'flat' ], true ) ? $modern_icons['style'] : 'line',
+        ];
         
         // Wizard flag
         $validated['wizard_completed'] = (bool) ( $settings['wizard_completed'] ?? false );
@@ -407,29 +421,6 @@ class Template_Controller {
     }
 
     /**
-     * Generate CSS from settings (simplified)
-     *
-     * @param array $settings Validated settings
-     * @return string CSS string
-     */
-    private function generate_css_from_settings( array $settings ): string {
-        $brand_color = $settings['brandColor'] ?? '#5E6AD2';
-        $sidebar_width = $settings['sidebarWidth'] ?? 240;
-        $top_bar_height = $settings['topBarHeight'] ?? 46;
-        
-        $css  = ':root {';
-        $css .= '--saasvibe-brand-color: ' . $brand_color . ';';
-        $css .= '--saasvibe-sidebar-width: ' . $sidebar_width . 'px;';
-        $css .= '--saasvibe-topbar-height: ' . $top_bar_height . 'px;';
-        $css .= '}';
-        $css .= '#wpadminbar { height: var(--saasvibe-topbar-height); }';
-        $css .= '#adminmenuback, #adminmenuwrap { width: var(--saasvibe-sidebar-width); }';
-        $css .= '.wp-admin #wpcontent { margin-left: var(--saasvibe-sidebar-width); }';
-
-        return $css;
-    }
-
-    /**
      * Get default settings
      *
      * @return array
@@ -455,6 +446,10 @@ class Template_Controller {
                 'howdy'       => false,
             ],
             'roleVisibility'  => [],
+            'modernIcons'     => [
+                'enabled' => false,
+                'style'   => 'line',
+            ],
             'wizard_completed' => false,
         ];
     }
