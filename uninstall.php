@@ -23,13 +23,22 @@ function saasvibe_delete_plugin_data() {
     wp_cache_delete( 'saasvibe_settings_cache' );
 }
 
-if ( is_multisite() ) {
-    $site_ids = get_sites( [ 'fields' => 'ids', 'number' => 0 ] );
-    foreach ( $site_ids as $site_id ) {
-        switch_to_blog( $site_id );
+/**
+ * Run the cleanup across one site or every site on a network.
+ *
+ * Wrapped in a prefixed function so loop variables stay local and do not leak
+ * into the global scope.
+ */
+function saasvibe_run_uninstall() {
+    if ( is_multisite() ) {
+        $site_ids = get_sites( [ 'fields' => 'ids', 'number' => 0 ] );
+        foreach ( $site_ids as $site_id ) {
+            switch_to_blog( $site_id );
+            saasvibe_delete_plugin_data();
+            restore_current_blog();
+        }
+    } else {
         saasvibe_delete_plugin_data();
-        restore_current_blog();
     }
-} else {
-    saasvibe_delete_plugin_data();
 }
+saasvibe_run_uninstall();

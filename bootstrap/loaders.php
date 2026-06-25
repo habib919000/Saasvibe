@@ -668,55 +668,6 @@ add_action( 'admin_enqueue_scripts', function() {
     }
 }, 21 );
 
-// --- Modern Icons Injection ----------------------------------------------------
-add_action( 'admin_enqueue_scripts', function() {
-    $settings = saasvibe_get_applied_settings();
-    if ( null === $settings ) {
-        return;
-    }
-    
-    $modern_icons = $settings['modernIcons'] ?? [];
-    if ( empty( $modern_icons['enabled'] ) ) {
-        return;
-    }
-
-    // Pass configuration to JS
-    $style = $modern_icons['style'] ?? 'line';
-    wp_add_inline_script(
-        'common',
-        'window.SaasvibeModernIcons = ' . wp_json_encode( [ 'style' => $style ] ) . ';',
-        'before'
-    );
-
-    // Provide the CSS rule to hide original dashicon font on replaced elements
-    $css = '.saasvibe-lucide-replaced::before { display: none !important; } '
-         . '.saasvibe-lucide-replaced { display: flex !important; align-items: center; justify-content: center; }';
-    
-    if ( wp_style_is( 'saasvibe-template', 'enqueued' ) ) {
-        wp_add_inline_style( 'saasvibe-template', $css );
-    } else {
-        wp_add_inline_style( 'admin-bar', $css );
-    }
-
-    // Enqueue Lucide library from CDN and our mapping script
-    // Note: If WP.org objects to the CDN, it can be bundled locally in a future update
-    wp_enqueue_script(
-        'saasvibe-lucide',
-        'https://unpkg.com/lucide@latest',
-        [],
-        null,
-        true
-    );
-
-    wp_enqueue_script(
-        'saasvibe-modern-icons',
-        SAASVIBE_URL . 'assets/js/modern-icons.js',
-        [ 'saasvibe-lucide' ],
-        SAASVIBE_VERSION,
-        true
-    );
-}, 22 );
-
 // ============================================
 // 6. Global Error Handler
 // ============================================
