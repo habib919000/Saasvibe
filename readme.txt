@@ -3,7 +3,7 @@ Contributors: habib919000
 Tags: admin, dashboard, customization, templates, branding
 Requires at least: 5.8
 Requires PHP: 7.4
-Tested up to: 6.6
+Tested up to: 7.0
 Stable tag: 1.0.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -14,7 +14,7 @@ Transform your admin dashboard with modern design templates, brand customization
 
 **Saasvibe** is a professional-grade WordPress plugin that transforms your admin dashboard with beautiful, modern design templates and comprehensive customization options. Perfect for agencies, enterprises, and anyone seeking a polished, branded admin interface.
 
-Build for WordPress 5.8+, tested through 6.6, with full PHP 7.4 compatibility.
+Built for WordPress 5.8+, tested through 7.0, with full PHP 7.4 compatibility.
 
 = ✨ Core Features =
 
@@ -79,6 +79,23 @@ WCAG 2.1 AA compliant:
 * Zero impact on frontend performance
 * Deferred script loading
 
+== Source Code ==
+
+This plugin is open source and its full, uncompiled source code is included in
+the plugin package as well as in a public repository.
+
+* Public source repository: https://github.com/habib919000/Saasvibe
+* Uncompiled JavaScript/React source: included in `views/assets/src/`
+* Build configuration: `webpack.config.js`, `package.json` (uses @wordpress/scripts)
+
+The files in `views/assets/dist/` are generated from the source above using the
+WordPress build toolchain (webpack via @wordpress/scripts). To build them
+yourself:
+
+1. Install dependencies: `npm install`
+2. Produce the production build: `npm run build`
+3. For a development watch build: `npm start`
+
 == Installation ==
 
 **Automatic Installation:**
@@ -138,7 +155,7 @@ Yes. The Advanced tab includes import/export functionality. Export settings as J
 All inputs are validated and sanitized, and every mutating API endpoint requires nonce verification and the `manage_options` capability. Settings are stored in the standard WordPress options table and the plugin performs no external data collection.
 
 = Do you offer support? =
-Yes. Visit our documentation at https://github.com/habib919000/saasvibe for guides, troubleshooting, and contact information.
+Yes. Visit our documentation at https://github.com/habib919000/Saasvibe for guides, troubleshooting, and contact information.
 
 == Screenshots ==
 
