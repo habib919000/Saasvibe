@@ -3,7 +3,7 @@
  * Plugin Name:       Saasvibe
  * Plugin URI:        https://github.com/habib919000/Saasvibe
  * Description:       Transform your WordPress dashboard with beautiful design templates, brand customization, and role-based access control. Enterprise-grade security with WCAG accessibility.
- * Version:           1.0.0
+ * Version:           2.1.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            habib919000
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'SAASVIBE_VERSION', '1.0.0' );
+define( 'SAASVIBE_VERSION', '2.1.0' );
 define( 'SAASVIBE_FILE', __FILE__ );
 define( 'SAASVIBE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SAASVIBE_URL', plugin_dir_url( __FILE__ ) );

@@ -1,10 +1,19 @@
 /* Linear Dark Template for WP Admin Nav Designer */
 
 /* 1. Global Dimensions & Variables Layout Override */
+/* Core sizes #adminmenu and its inline submenus at a fixed 160px alongside the
+   wrappers, so all four have to follow the setting or the <ul> sits narrower
+   than the sidebar it lives in. */
+#adminmenuback,
+#adminmenuwrap,
+#adminmenu,
+#adminmenu .wp-submenu {
+    width: var(--saasvibe-sidebar-width, 240px) !important;
+}
+
 #adminmenuback,
 #adminmenuwrap {
-    width: var(--saasvibe-sidebar-width, 240px) !important;
-    background-color: #16161A !important;
+    background-color: #000000 !important;
 }
 
 #wpcontent,
@@ -14,7 +23,8 @@
 
 /* Collapsed sidebar compatibility */
 .folded #adminmenuback,
-.folded #adminmenuwrap {
+.folded #adminmenuwrap,
+.folded #adminmenu {
     width: 60px !important;
 }
 
@@ -27,7 +37,7 @@
 #wpadminbar {
     height: var(--saasvibe-topbar-height, 46px) !important;
     min-height: var(--saasvibe-topbar-height, 46px) !important;
-    background: #16161A !important;
+    background: #000000 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-sizing: border-box;
 }
@@ -67,7 +77,7 @@ html.wp-toolbar {
 #wpadminbar .ab-item:hover .dashicons::before,
 #wpadminbar .ab-item:hover .dashicons-before,
 #wpadminbar .ab-item:hover .dashicons-before::before {
-    color: var(--saasvibe-brand-color, #5E6AD2) !important;
+    color: var(--saasvibe-brand-color, #2563EB) !important;
 }
 
 #wpadminbar .ab-item,
@@ -78,89 +88,237 @@ html.wp-toolbar {
 
 #wpadminbar #wp-admin-bar-root-default > li:hover > .ab-item,
 #wpadminbar .quicklinks .menupop:hover > .ab-item {
-    background-color: #1E1E24 !important;
+    background-color: #1A1A1A !important;
 }
 
 #wpadminbar .ab-sub-wrapper {
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
-    background: #1E1E24 !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6) !important;
+    background: #111111 !important;
 }
 
 #wpadminbar .ab-submenu .ab-item:hover {
-    color: var(--saasvibe-brand-color, #5E6AD2) !important;
-    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: var(--saasvibe-brand-color, #2563EB) !important;
+    background-color: #1A1A1A !important;
 }
 
 /* 3. Sidebar (#adminmenu) Styling */
 #adminmenu {
     margin: 0 !important;
-    background-color: #16161A !important;
+    padding-top: 8px !important;
+    background-color: #000000 !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
 #adminmenu li.wp-menu-separator {
     height: 1px !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    margin: 12px 16px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    margin: 14px 16px !important;
 }
 
-#adminmenu a.menu-top {
-    color: #C1C1CA !important;
-    font-weight: 500 !important;
-    border-radius: 6px !important;
-    padding: var(--saasvibe-menu-item-padding, 8px 12px) !important;
-    transition: all 150ms ease-in-out !important;
-}
-
+/* Keep the <li> itself unpainted: every highlight is drawn on the anchor so
+   hover/active pills keep their rounded corners and side inset. */
+#adminmenu li.menu-top,
 #adminmenu li.menu-top:hover,
 #adminmenu li.opensub,
 #adminmenu li.wp-has-current-submenu,
 #adminmenu li.current {
+    background: transparent !important;
     background-color: transparent !important;
 }
 
+#adminmenu a.menu-top {
+    position: relative !important;
+    color: #E4E4E7 !important;
+    font-weight: 500 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    /* Horizontal inset so the rounded highlight sits inside the sidebar rather
+       than running edge to edge. Vertical spacing stays on .wp-menu-name. */
+    margin: 2px 8px !important;
+    transition: background-color 150ms ease, color 150ms ease !important;
+}
+
+/* WordPress puts a top-level item's own spacing on the label div, not the
+   anchor, so the density setting is applied there. Padding on the anchor as
+   well would double it. */
+#adminmenu div.wp-menu-name {
+    padding: var(--saasvibe-menu-item-padding, 8px 12px) !important;
+}
+
+/* Reserve the trailing gutter on items that carry a chevron, so a long label
+   or core's update-count bubble cannot run underneath it. */
+#adminmenu li.wp-has-submenu > a.menu-top div.wp-menu-name {
+    padding-inline-end: 30px !important;
+}
+
+/* Hover / open: neutral grey fill, no brand tint (per reference). */
 #adminmenu a.menu-top:hover,
-#adminmenu li.menu-top:hover a.menu-top,
-#adminmenu li.opensub a.menu-top,
-#adminmenu li.wp-has-current-submenu a.menu-top,
-#adminmenu li.current a.menu-top {
+#adminmenu li.menu-top:hover > a.menu-top,
+#adminmenu li.opensub > a.menu-top {
     color: #FFFFFF !important;
-    background-color: var(--saasvibe-brand-hover-color, rgba(94, 106, 210, 0.1)) !important;
+    background-color: #1A1A1A !important;
 }
 
-/* Selected menu item highlight */
-#adminmenu li.wp-has-current-submenu.wp-menu-open,
-#adminmenu li.wp-has-current-submenu a.menu-top,
-#adminmenu li.current a.menu-top {
-    border-left: 4px solid var(--saasvibe-brand-color, #5E6AD2) !important;
-    padding-left: calc(var(--saasvibe-menu-item-padding-left, 12px) - 4px) !important;
+/* Active parent: brand-coloured label + icon only. No fill, no left border --
+   the emphasis lives on the active submenu item instead. */
+#adminmenu li.wp-has-current-submenu > a.menu-top,
+#adminmenu li.wp-has-current-submenu.wp-menu-open > a.menu-top,
+#adminmenu li.current > a.menu-top,
+#adminmenu li.wp-has-current-submenu:hover > a.menu-top {
+    color: var(--saasvibe-brand-color, #2563EB) !important;
+    background-color: transparent !important;
+    border-left: none !important;
 }
 
-/* Sidebar submenu styles */
-#adminmenu .wp-submenu {
-    background-color: #1E1E24 !important;
-    padding: 4px 8px !important;
+/* Expand/collapse chevron for items that own a submenu (dashicons glyphs). */
+#adminmenu li.wp-has-submenu > a.menu-top::after {
+    content: "\f345" !important; /* dashicons-arrow-right-alt2 */
+    font-family: 'dashicons' !important;
+    font-size: 16px !important;
+    font-weight: 400 !important;
+    -webkit-font-smoothing: antialiased;
+    position: absolute !important;
+    /* Logical inset keeps the chevron on the trailing edge in RTL too. Sits
+       hard against the item's trailing edge, after the update-count bubble. */
+    inset-inline-end: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    /* Fixed box with zeroed margins so the glyph lands in exactly the same
+       place in every state. Core styles this same ::after as its
+       current-submenu pointer triangle and gives it a negative margin, which
+       otherwise nudges the open item's chevron out of line with the rest. */
+    width: 20px !important;
+    height: 20px !important;
     margin: 0 !important;
-    border-left: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 0 !important;
+    line-height: 20px !important;
+    text-align: center !important;
+    color: inherit !important;
+    opacity: 0.55 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+[dir="rtl"] #adminmenu li.wp-has-submenu > a.menu-top::after {
+    content: "\f341" !important; /* dashicons-arrow-left-alt2 */
+}
+
+[dir="rtl"] #adminmenu li.wp-has-submenu.wp-menu-open > a.menu-top::after,
+[dir="rtl"] #adminmenu li.wp-has-submenu.opensub > a.menu-top::after {
+    content: "\f347" !important;
+}
+
+#adminmenu li.wp-has-submenu.wp-menu-open > a.menu-top::after,
+#adminmenu li.wp-has-submenu.opensub > a.menu-top::after {
+    content: "\f347" !important; /* dashicons-arrow-down-alt2 */
+}
+
+/* Folded rail has no room for the chevron. */
+.folded #adminmenu li.wp-has-submenu > a.menu-top::after {
+    display: none !important;
+}
+
+/* Suppress WordPress core's own flyout arrow so it can't sit beside ours. */
+#adminmenu li.wp-has-current-submenu .wp-menu-arrow,
+#adminmenu li.wp-has-current-submenu .wp-menu-arrow div,
+#adminmenu .wp-menu-arrow {
+    display: none !important;
+}
+
+/* Sidebar submenu: inline (menu expanded) renders flat on the sidebar with no
+   panel or rule -- items simply indent to line up under the parent label. */
+#adminmenu .wp-submenu {
+    background: transparent !important;
+    background-color: transparent !important;
+    padding: 2px 0 6px !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 #adminmenu .wp-submenu a {
-    color: #94949E !important;
-    padding: 6px 12px !important;
-    border-radius: 4px !important;
-    transition: all 150ms ease-in-out !important;
+    color: #E4E4E7 !important;
+    font-weight: 400 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    margin: 2px 8px !important;
+    /* 36px = core .wp-menu-image gutter, so submenu text lands under the
+       parent's label rather than its icon. */
+    padding: 8px 12px 8px calc(var(--saasvibe-menu-item-padding-left, 12px) + 36px) !important;
+    transition: background-color 150ms ease, color 150ms ease !important;
 }
 
 #adminmenu .wp-submenu a:hover,
-#adminmenu .wp-submenu li.current a {
+#adminmenu .wp-submenu a:focus,
+#adminmenu .wp-submenu a:active {
     color: #FFFFFF !important;
-    background-color: rgba(255, 255, 255, 0.04) !important;
+    background-color: #1A1A1A !important;
+    /* Core paints a white inset bar on the leading edge via box-shadow. */
+    box-shadow: none !important;
 }
 
-#adminmenu .wp-submenu li.current a {
-    color: var(--saasvibe-brand-color, #5E6AD2) !important;
-    font-weight: 600 !important;
+/* Core also injects pseudo-element markers (the white sliver / hover dot) on
+   submenu anchors. Neither is part of this design. */
+#adminmenu .wp-submenu a::before,
+#adminmenu .wp-submenu a::after {
+    content: none !important;
+    display: none !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Active submenu item: solid brand fill, contrast-safe label. */
+#adminmenu .wp-submenu li.current a,
+#adminmenu .wp-submenu li.current a:hover,
+#adminmenu .wp-submenu li.current a:focus {
+    color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
+    background-color: var(--saasvibe-brand-color, #2563EB) !important;
+    box-shadow: none !important;
+    font-weight: 500 !important;
+}
+
+/* Flyout submenus (folded rail, or hovering a closed parent) still float over
+   page content, so they keep a solid panel and elevation. */
+.folded #adminmenu .wp-submenu,
+#adminmenu li.menu-top:not(.wp-menu-open):hover > .wp-submenu {
+    /* Floating panels size to their content, not to the sidebar -- otherwise a
+       folded 60px rail would emit 60px-wide flyouts. */
+    width: auto !important;
+    min-width: 200px !important;
+    background-color: #111111 !important;
+    padding: 6px 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6) !important;
+}
+
+.folded #adminmenu .wp-submenu a,
+#adminmenu li.menu-top:not(.wp-menu-open):hover > .wp-submenu a {
+    padding: 8px 14px !important;
+}
+
+/* Submenu headers (the repeated parent title WP prepends) stay quiet. */
+#adminmenu .wp-submenu .wp-submenu-head {
+    color: #71717A !important;
+    padding: 8px 14px !important;
+}
+
+/* Folded rail: drop the side inset so the 60px rail centres its icons instead
+   of clipping them. ('auto-fold' is on <body> at every width, so the same
+   treatment for it lives in the <=960px media query at the end of this file.) */
+.folded #adminmenu a.menu-top {
+    margin: 2px 4px !important;
+    padding: 10px 0 !important;
+    text-align: center !important;
+}
+
+.folded #adminmenu .wp-submenu a {
+    margin: 2px 6px !important;
+    text-align: left !important;
 }
 
 /* Icons styling */
@@ -175,24 +333,31 @@ html.wp-toolbar {
 }
 
 #adminmenu div.wp-menu-image::before {
-    color: #C1C1CA !important;
+    color: #E4E4E7 !important;
     transition: color 150ms ease !important;
 }
 
-#adminmenu li:hover div.wp-menu-image::before,
-#adminmenu li.wp-has-current-submenu div.wp-menu-image::before {
-    color: var(--saasvibe-brand-color, #5E6AD2) !important;
+#adminmenu li:hover div.wp-menu-image::before {
+    color: #FFFFFF !important;
+}
+
+/* Active parent icon tracks the brand colour alongside its label. */
+#adminmenu li.wp-has-current-submenu div.wp-menu-image::before,
+#adminmenu li.current div.wp-menu-image::before,
+#adminmenu li.wp-has-current-submenu:hover div.wp-menu-image::before {
+    color: var(--saasvibe-brand-color, #2563EB) !important;
 }
 
 /* Collapse toggle button restyle */
 #collapse-button {
-    color: #94949E !important;
+    color: #A1A1AA !important;
     margin: 8px !important;
+    border-radius: 8px !important;
 }
 
 #collapse-button:hover {
     color: #FFFFFF !important;
-    background-color: rgba(255, 255, 255, 0.05) !important;
+    background-color: #1A1A1A !important;
 }
 
 /* Custom logo styling inside sidebar */
@@ -226,14 +391,20 @@ html.wp-toolbar {
 #adminmenu a.menu-top:focus-visible,
 #adminmenu .wp-submenu a:focus-visible,
 #collapse-button:focus-visible {
-    outline: 2px solid var(--saasvibe-brand-color, #5E6AD2) !important;
+    outline: 2px solid var(--saasvibe-brand-color, #2563EB) !important;
     outline-offset: -2px !important;
-    background-color: var(--saasvibe-brand-hover-color, rgba(94, 106, 210, 0.1)) !important;
+    background-color: #1A1A1A !important;
+}
+
+/* The active submenu item keeps its brand fill when focused; only the ring is added. */
+#adminmenu .wp-submenu li.current a:focus-visible {
+    background-color: var(--saasvibe-brand-color, #2563EB) !important;
+    outline-color: #FFFFFF !important;
 }
 
 #wpadminbar .ab-item:focus-visible,
 #wpadminbar a:focus-visible {
-    outline: 2px solid var(--saasvibe-brand-color, #5E6AD2) !important;
+    outline: 2px solid var(--saasvibe-brand-color, #2563EB) !important;
     outline-offset: -2px !important;
 }
 
@@ -247,12 +418,35 @@ html.wp-toolbar {
  * ============================================================ */
 @media screen and (max-width: 960px) {
     .auto-fold #adminmenuback,
-    .auto-fold #adminmenuwrap {
+    .auto-fold #adminmenuwrap,
+    .auto-fold #adminmenu {
         width: 36px !important;
     }
     .auto-fold #wpcontent,
     .auto-fold #wpfooter {
         margin-left: 36px !important;
+    }
+    /* Same rail treatment as .folded, applied only once auto-fold really folds. */
+    .auto-fold #adminmenu a.menu-top {
+        margin: 2px 2px !important;
+        padding: 10px 0 !important;
+        text-align: center !important;
+    }
+    .auto-fold #adminmenu li.wp-has-submenu > a.menu-top::after {
+        display: none !important;
+    }
+    .auto-fold #adminmenu .wp-submenu {
+        width: auto !important;
+        min-width: 200px !important;
+        background-color: #111111 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 10px !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6) !important;
+    }
+    .auto-fold #adminmenu .wp-submenu a {
+        margin: 2px 6px !important;
+        padding: 8px 14px !important;
+        text-align: left !important;
     }
 }
 
@@ -263,6 +457,14 @@ html.wp-toolbar {
     .auto-fold #adminmenuwrap {
         width: 190px !important;
         margin-left: -190px !important;
+    }
+    #adminmenu,
+    #adminmenu .wp-submenu,
+    .auto-fold #adminmenu,
+    .auto-fold #adminmenu .wp-submenu {
+        width: 190px !important;
+        min-width: 0 !important;
+        margin-left: 0 !important;
     }
     #wpcontent,
     #wpfooter,

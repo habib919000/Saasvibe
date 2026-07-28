@@ -26,10 +26,10 @@ class Template_Controller {
                 'tier'          => 'free',
                 'designRef'     => 'Linear.app',
                 'defaultColors' => [
-                    'background' => '#16161A',
+                    'background' => '#000000',
                     'text'       => '#FFFFFF',
-                    'accent'     => '#5E6AD2',
-                    'hover'      => '#1E1E24',
+                    'accent'     => '#2563EB',
+                    'hover'      => '#1A1A1A',
                 ],
             ],
             [
@@ -68,7 +68,7 @@ class Template_Controller {
                     'background' => '#000000',
                     'text'       => '#FFFFFF',
                     'accent'     => '#FF5858',
-                    'hover'      => 'rgba(255, 88, 88, 0.2)',
+                    'hover'      => '#1A1A1A',
                 ],
             ],
         ];

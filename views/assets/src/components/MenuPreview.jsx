@@ -75,6 +75,23 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 	};
 	const brandTextColor = getIdealTextColor( rgb.r, rgb.g, rgb.b );
 
+	// Every template marks the active row with a solid fill. Classic Elevated
+	// inverts it -- its sidebar is already painted with the brand color, so the
+	// fill has to be the contrast color with a brand-colored label.
+	const invertsActiveFill = activeTemplate.id === 'classic-elevated';
+	const activeFillBg = invertsActiveFill ? brandTextColor : brandColor;
+	const activeFillText = invertsActiveFill ? brandColor : brandTextColor;
+
+	// Signature corner radius per template.
+	const activeFillRadius =
+		activeTemplate.id === 'wedevs-dark'
+			? '9999px'
+			: activeTemplate.id === 'vercel-minimal'
+			? '4px'
+			: activeTemplate.id === 'classic-elevated'
+			? '6px'
+			: '8px';
+
 	const mockMenuItems = [
 		{
 			icon: <Home className="h-4 w-4 shrink-0" />,
@@ -170,17 +187,13 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 										key={ i }
 										style={ {
 											backgroundColor: isSelected
-												? brandHover
+												? activeFillBg
 												: 'transparent',
 											color: isSelected
-												? activeTemplate.id ===
-												  'vercel-minimal'
-													? '#000000'
-													: '#FFFFFF'
+												? activeFillText
 												: previewStyles.sidebarText,
-											borderLeft: isSelected
-												? `3px solid ${ brandColor }`
-												: '3px solid transparent',
+											borderRadius: activeFillRadius,
+											margin: '0 8px',
 										} }
 										className={ `flex items-center gap-2.5 text-xs font-medium cursor-pointer transition-all ${ itemPadding } ${
 											isSelected
@@ -191,7 +204,7 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 										<span
 											style={ {
 												color: isSelected
-													? brandColor
+													? activeFillText
 													: 'inherit',
 											} }
 										>

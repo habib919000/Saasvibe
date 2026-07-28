@@ -229,8 +229,8 @@ export const ColorCustomizer = ( { settings, onChange, activeTemplate } ) => {
 						</div>
 						<input
 							type="range"
-							min="200"
-							max="320"
+							min="160"
+							max="280"
 							step="5"
 							value={ settings.sidebarWidth }
 							onChange={ ( e ) =>
@@ -405,7 +405,7 @@ export const ColorCustomizer = ( { settings, onChange, activeTemplate } ) => {
 							{ __( 'Width Adjustment: ', 'saasvibe' ) }
 						</strong>
 						{ __(
-							'Set sidebar widths between 200px and 320px depending on the depth of your site menu titles to avoid truncation.',
+							'Set sidebar widths between 160px (the WordPress default) and 280px depending on the depth of your site menu titles to avoid truncation.',
 							'saasvibe'
 						) }
 					</li>

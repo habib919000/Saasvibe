@@ -4,7 +4,7 @@ Tags: admin, dashboard, customization, templates, branding
 Requires at least: 5.8
 Requires PHP: 7.4
 Tested up to: 7.0
-Stable tag: 1.0.0
+Stable tag: 2.1.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -167,6 +167,25 @@ Yes. Visit our documentation at https://github.com/habib919000/Saasvibe for guid
 6. **Settings Management** — Complete customization interface with real-time preview
 
 == Changelog ==
+
+= 2.1.0 =
+**Redesigned navigation templates:**
+* All four templates rebuilt on a shared interaction model: the active parent menu item is marked by colour alone, while the active submenu item carries a solid brand fill
+* Added expand/collapse chevrons on menu items that own a submenu, using WordPress Dashicons and mirrored for RTL
+* Inline submenus now render flat on the sidebar, indented to align beneath the parent label; floating flyouts keep a solid panel
+* Linear Dark restyled to a pure black chrome with a blue accent driven entirely by the brand colour setting
+* weDevs Dark gained sidebar width, top bar height, and responsive support it previously lacked
+
+**Fixed:**
+* Sidebar width setting now resizes the menu list itself, not just the surrounding wrappers
+* Removed a stray inset bar and pseudo-element markers WordPress core paints on hovered submenu items
+* Menu item padding no longer doubles up against the core label spacing, so the density control behaves predictably
+* Chevrons keep a consistent position across every menu state
+* Reserved a trailing gutter so update-count bubbles no longer sit underneath the chevron
+
+**Changed:**
+* Sidebar width range is now 160px (the WordPress default) to 280px
+* Menu typography reverted to the WordPress default sizes
 
 = 1.0.0 =
 **Security Hardening (P0 Priority):**
