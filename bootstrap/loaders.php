@@ -371,19 +371,26 @@ add_action( 'admin_enqueue_scripts', function() {
         // left to each template's own fallbacks so light/dark themes stay legible.
         $brand   = $settings['brandColor'] ?? '';
         $hover   = '';
-        if ( empty( $brand ) ) {
-            $template_controller = new \Saasvibe\Controllers\Template_Controller();
-            $templates = $template_controller->get_templates_list();
-            foreach ( $templates as $t ) {
-                if ( $t['id'] === $template_id ) {
+
+        // The template's own chrome color is needed either way: to fall back to
+        // its accent when no brand color is set, and to work out how far a brand
+        // color has to move to stay legible as a label on that chrome.
+        $template_controller = new \Saasvibe\Controllers\Template_Controller();
+        $chrome_bg = '';
+        $muted     = [];
+        foreach ( $template_controller->get_templates_list() as $t ) {
+            if ( $t['id'] === $template_id ) {
+                $chrome_bg = $t['defaultColors']['background'] ?? '';
+                $muted     = $t['mutedColors'] ?? [];
+                if ( empty( $brand ) ) {
                     $brand = $t['defaultColors']['accent'] ?? '';
                     $hover = $t['defaultColors']['hover'] ?? '';
-                    break;
                 }
+                break;
             }
-            if ( empty( $brand ) ) {
-                $brand = $wp_brand_color;
-            }
+        }
+        if ( empty( $brand ) ) {
+            $brand = $wp_brand_color;
         }
         $sidebar = (int) ( $settings['sidebarWidth'] ?? 240 );
         $topbar  = (int) ( $settings['topBarHeight'] ?? 46 );
@@ -416,19 +423,103 @@ add_action( 'admin_enqueue_scripts', function() {
 
         // Derive brand hover tint + contrast text color so the preview's
         // brand-driven highlights are reproduced 1:1 in the real admin.
-        $rgb        = saasvibe_hex_to_rgb( $brand );
+        $rgb         = saasvibe_hex_to_rgb( $brand );
         $brand_hover = ! empty( $hover ) ? $hover : sprintf( 'rgba(%d,%d,%d,0.10)', $rgb['r'], $rgb['g'], $rgb['b'] );
-        $brand_text  = saasvibe_contrast_color( $rgb );
 
+        // Surfaces that carry text are painted with the legible fill, not the raw
+        // pick: a mid-tone around #767676 reaches only ~4.48:1 against both black
+        // and white, so the fill itself is nudged clear of that band. Every other
+        // brand color passes straight through untouched.
+        $target      = saasvibe_contrast_target( $settings );
+        $brand_fill  = saasvibe_legible_fill( $rgb, $target );
+        $fill_rgb    = saasvibe_hex_to_rgb( $brand_fill );
+        $brand_text  = saasvibe_contrast_color( $fill_rgb );
+
+        // Hover washes move the surface AWAY from its text color, so a label keeps
+        // its ratio when a hover fill slides underneath it.
+        $surface      = saasvibe_surface_rgba( $fill_rgb, 0.12 );
+        $surface_up   = saasvibe_surface_rgba( $fill_rgb, 0.15 );
+        $line         = saasvibe_surface_rgba( $fill_rgb, 0.14 );
+
+        // Every surface a brand-chrome label can sit on: the chrome itself and the
+        // two hover washes. Text colors are checked against all three.
+        $wash = function( $alpha ) use ( $fill_rgb, $brand_text ) {
+            $channel = '#FFFFFF' === $brand_text ? 0 : 255;
+            return [
+                'r' => $alpha * $channel + ( 1 - $alpha ) * $fill_rgb['r'],
+                'g' => $alpha * $channel + ( 1 - $alpha ) * $fill_rgb['g'],
+                'b' => $alpha * $channel + ( 1 - $alpha ) * $fill_rgb['b'],
+            ];
+        };
+        $chrome_surfaces = [ $fill_rgb, $wash( 0.12 ), $wash( 0.15 ) ];
+
+        // Where the brand color is used as a label or icon color rather than as a
+        // fill, it has to clear AA against every surface behind it -- resting and
+        // hover alike. Classic Elevated paints its chrome with the brand color
+        // itself, so there the brand-colored label sits on the derived contrast
+        // fill; every other template puts it on the template's own background.
+        // Each template's own hover fill, the second surface a label can sit on.
+        $accent_hover = 'vercel-minimal' === $template_id ? '#F3F4F6' : '#1A1A1A';
+
+        if ( 'classic-elevated' === $template_id ) {
+            $accent_bgs = [ saasvibe_hex_to_rgb( $brand_text ) ];
+        } else {
+            $base = ! empty( $chrome_bg ) ? $chrome_bg : '#000000';
+            $accent_bgs = [ saasvibe_hex_to_rgb( $base ) ];
+            // The templates' own hover fill, which the accent label also sits on.
+            $accent_bgs[] = saasvibe_hex_to_rgb( $accent_hover );
+        }
+        $brand_accent = saasvibe_accessible_on( $rgb, $accent_bgs, $target );
+
+        // The templates' own static greys (menu icons, flyout headers, the collapse
+        // button) are brand-independent but not target-independent: several clear
+        // AA comfortably and land just under AAA. Hold each to the configured
+        // target against every surface it is drawn on, so switching to AAA
+        // tightens them instead of leaving them behind.
+        $muted_surfaces = [];
+        foreach ( array_unique( [ $chrome_bg ?: '#000000', $accent_hover ] ) as $muted_surface ) {
+            $muted_surfaces[] = saasvibe_hex_to_rgb( $muted_surface );
+        }
+        $muted_vars = '';
+        foreach ( [ 'icon', 'head', 'control' ] as $role ) {
+            if ( empty( $muted[ $role ] ) ) {
+                continue;
+            }
+            $muted_vars .= sprintf(
+                '--saasvibe-chrome-%s:%s;',
+                $role,
+                saasvibe_accessible_on( saasvibe_hex_to_rgb( $muted[ $role ] ), $muted_surfaces, $target )
+            );
+        }
+
+        // Tinted variants of the contrast color, each opaque enough to stay above
+        // the target on the chrome and on both hover washes. Templates that paint
+        // their chrome with the brand color (Classic Elevated) use these for idle
+        // labels and dividers, so those flip with the brand color instead of being
+        // hardcoded white on a possibly light background.
         $vars = sprintf(
-            ':root{--saasvibe-brand-color:%s;--saasvibe-brand-hover-color:%s;--saasvibe-brand-text-color:%s;--saasvibe-sidebar-width:%dpx;--saasvibe-topbar-height:%dpx;--saasvibe-menu-item-padding:%s;--saasvibe-menu-item-padding-left:%s;}',
+            ':root{%16$s--saasvibe-brand-color:%1$s;--saasvibe-brand-fill:%2$s;--saasvibe-brand-hover-color:%3$s;'
+            . '--saasvibe-brand-text-color:%4$s;--saasvibe-brand-accent:%5$s;'
+            . '--saasvibe-brand-text-strong:%6$s;--saasvibe-brand-text-soft:%7$s;--saasvibe-brand-text-faint:%8$s;'
+            . '--saasvibe-brand-surface:%9$s;--saasvibe-brand-surface-strong:%10$s;--saasvibe-brand-line:%11$s;'
+            . '--saasvibe-sidebar-width:%12$dpx;--saasvibe-topbar-height:%13$dpx;'
+            . '--saasvibe-menu-item-padding:%14$s;--saasvibe-menu-item-padding-left:%15$s;}',
             $brand,
+            $brand_fill,
             $brand_hover,
             $brand_text,
+            $brand_accent,
+            saasvibe_contrast_rgba( $fill_rgb, 0.85, $target, $chrome_surfaces ),
+            saasvibe_contrast_rgba( $fill_rgb, 0.75, $target, $chrome_surfaces ),
+            saasvibe_contrast_rgba( $fill_rgb, 0.6, $target, $chrome_surfaces ),
+            $surface,
+            $surface_up,
+            $line,
             $sidebar,
             $topbar,
             $pad,
-            $pad_left
+            $pad_left,
+            $muted_vars
         );
 
         wp_add_inline_style( 'saasvibe-template', $vars );
@@ -468,13 +559,402 @@ if ( ! function_exists( 'saasvibe_hex_to_rgb' ) ) {
 }
 
 /**
- * Pick black or white for legible text on a given brand color.
- * Mirrors the React preview's getIdealTextColor (relative luminance).
+ * WCAG 2.1 relative luminance (0 = black, 1 = white) for an [r,g,b] map.
+ *
+ * Channels are linearized out of sRGB's gamma curve before being weighted; a
+ * plain weighted average of the raw 0-255 channels overstates how bright mid
+ * and dark colors are and picks unreadable text for them.
+ *
+ * @see https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
+ */
+if ( ! function_exists( 'saasvibe_relative_luminance' ) ) {
+    function saasvibe_relative_luminance( array $rgb ) {
+        $channels = [];
+
+        foreach ( [ 'r', 'g', 'b' ] as $key ) {
+            $c = ( isset( $rgb[ $key ] ) ? (float) $rgb[ $key ] : 0.0 ) / 255;
+            $channels[] = $c <= 0.03928 ? $c / 12.92 : pow( ( $c + 0.055 ) / 1.055, 2.4 );
+        }
+
+        return 0.2126 * $channels[0] + 0.7152 * $channels[1] + 0.0722 * $channels[2];
+    }
+}
+
+/**
+ * Pick black or white -- whichever carries more contrast -- for legible text on
+ * a given brand color. Mirrors the React idealTextColor() in
+ * views/assets/src/utils/color.js so the live admin matches the preview.
+ *
+ * White wins while the background's relative luminance stays under the
+ * crossover point where both candidates yield the same WCAG contrast ratio:
+ * sqrt(1.05 * 0.05) - 0.05 ~= 0.1791.
  */
 if ( ! function_exists( 'saasvibe_contrast_color' ) ) {
     function saasvibe_contrast_color( array $rgb ) {
-        $luminance = ( 0.2126 * $rgb['r'] + 0.7152 * $rgb['g'] + 0.0722 * $rgb['b'] ) / 255;
-        return $luminance > 0.5 ? '#000000' : '#FFFFFF';
+        $luminance = saasvibe_relative_luminance( $rgb );
+        return $luminance <= ( sqrt( 1.05 * 0.05 ) - 0.05 ) ? '#FFFFFF' : '#000000';
+    }
+}
+
+/** WCAG 2.1 minimum contrast ratios for body text: AA is 4.5:1, AAA is 7:1. */
+if ( ! defined( 'SAASVIBE_AA_CONTRAST' ) ) {
+    define( 'SAASVIBE_AA_CONTRAST', 4.5 );
+}
+if ( ! defined( 'SAASVIBE_AAA_CONTRAST' ) ) {
+    define( 'SAASVIBE_AAA_CONTRAST', 7.0 );
+}
+
+/**
+ * The contrast ratio every derived color is held to, per the site's setting.
+ *
+ * AAA shifts brand-derived colors further from the picked hue -- on a mid-tone
+ * brand color a 7:1 fill is visibly darker or lighter than 4.5:1 -- so it is
+ * opt-in rather than the default.
+ *
+ * @param array $settings Plugin settings.
+ * @return float 4.5 or 7.0.
+ */
+if ( ! function_exists( 'saasvibe_contrast_target' ) ) {
+    function saasvibe_contrast_target( array $settings = [] ) {
+        return 'aaa' === ( $settings['contrastLevel'] ?? 'aa' )
+            ? SAASVIBE_AAA_CONTRAST
+            : SAASVIBE_AA_CONTRAST;
+    }
+}
+
+/**
+ * WCAG contrast ratio between two [r,g,b] maps, 1:1 to 21:1.
+ */
+if ( ! function_exists( 'saasvibe_contrast_ratio' ) ) {
+    function saasvibe_contrast_ratio( array $a, array $b ) {
+        $la = saasvibe_relative_luminance( $a );
+        $lb = saasvibe_relative_luminance( $b );
+        return ( max( $la, $lb ) + 0.05 ) / ( min( $la, $lb ) + 0.05 );
+    }
+}
+
+/**
+ * Format an [r,g,b] map as an uppercase #RRGGBB string.
+ */
+if ( ! function_exists( 'saasvibe_rgb_to_hex' ) ) {
+    function saasvibe_rgb_to_hex( array $rgb ) {
+        return sprintf(
+            '#%02X%02X%02X',
+            (int) max( 0, min( 255, round( $rgb['r'] ) ) ),
+            (int) max( 0, min( 255, round( $rgb['g'] ) ) ),
+            (int) max( 0, min( 255, round( $rgb['b'] ) ) )
+        );
+    }
+}
+
+/**
+ * Convert [r,g,b] (0-255) to [h,s,l] with h in degrees and s/l in 0-1.
+ */
+if ( ! function_exists( 'saasvibe_rgb_to_hsl' ) ) {
+    function saasvibe_rgb_to_hsl( array $rgb ) {
+        $r = $rgb['r'] / 255;
+        $g = $rgb['g'] / 255;
+        $b = $rgb['b'] / 255;
+        $max = max( $r, $g, $b );
+        $min = min( $r, $g, $b );
+        $delta = $max - $min;
+        $l = ( $max + $min ) / 2;
+        $h = 0.0;
+        $s = 0.0;
+
+        if ( $delta > 0 ) {
+            $s = $delta / ( 1 - abs( 2 * $l - 1 ) );
+
+            if ( $max === $r ) {
+                $h = fmod( ( $g - $b ) / $delta, 6 );
+            } elseif ( $max === $g ) {
+                $h = ( $b - $r ) / $delta + 2;
+            } else {
+                $h = ( $r - $g ) / $delta + 4;
+            }
+
+            $h *= 60;
+            if ( $h < 0 ) {
+                $h += 360;
+            }
+        }
+
+        return [ 'h' => $h, 's' => $s, 'l' => $l ];
+    }
+}
+
+/**
+ * Convert [h,s,l] back to [r,g,b] (0-255, unrounded).
+ */
+if ( ! function_exists( 'saasvibe_hsl_to_rgb' ) ) {
+    function saasvibe_hsl_to_rgb( array $hsl ) {
+        $c = ( 1 - abs( 2 * $hsl['l'] - 1 ) ) * $hsl['s'];
+        $x = $c * ( 1 - abs( fmod( $hsl['h'] / 60, 2 ) - 1 ) );
+        $m = $hsl['l'] - $c / 2;
+        $sextant = ( (int) floor( $hsl['h'] / 60 ) ) % 6;
+        if ( $sextant < 0 ) {
+            $sextant += 6;
+        }
+        $table = [
+            [ $c, $x, 0 ],
+            [ $x, $c, 0 ],
+            [ 0, $c, $x ],
+            [ 0, $x, $c ],
+            [ $x, 0, $c ],
+            [ $c, 0, $x ],
+        ];
+        list( $r, $g, $b ) = $table[ $sextant ];
+
+        return [
+            'r' => ( $r + $m ) * 255,
+            'g' => ( $g + $m ) * 255,
+            'b' => ( $b + $m ) * 255,
+        ];
+    }
+}
+
+/**
+ * Nudge a foreground color's lightness -- hue and saturation untouched -- until
+ * it clears $target against the given background, and no further. Mirrors
+ * accessibleOn() in views/assets/src/utils/color.js.
+ *
+ * Keeps brand-colored labels and icons legible on a template's own chrome: a
+ * near-black brand color on a black sidebar is lightened just enough to pass, a
+ * pale one on a white sidebar is darkened. Colors that already pass come back
+ * untouched, so most brand choices render exactly as picked.
+ *
+ * Pass every surface the color appears on -- an item's resting background AND
+ * its hover fill, say -- because a label tuned only to the resting background
+ * loses ratio the moment the hover fill slides underneath it.
+ *
+ * @param array $fg_rgb  Foreground channels.
+ * @param array $bg_list Background channels, or a list of them.
+ * @param float $target Minimum contrast ratio.
+ * @return string Hex color meeting the target where achievable.
+ */
+if ( ! function_exists( 'saasvibe_accessible_on' ) ) {
+    function saasvibe_accessible_on( array $fg_rgb, array $bg_list, $target = SAASVIBE_AA_CONTRAST ) {
+        // A single [r,g,b] map is accepted as shorthand for a one-surface list.
+        if ( isset( $bg_list['r'] ) ) {
+            $bg_list = [ $bg_list ];
+        }
+
+        $worst = function( array $color ) use ( $bg_list ) {
+            $ratios = [];
+            foreach ( $bg_list as $bg ) {
+                $ratios[] = saasvibe_contrast_ratio( $color, $bg );
+            }
+            return min( $ratios );
+        };
+
+        if ( $worst( $fg_rgb ) >= $target ) {
+            return saasvibe_rgb_to_hex( $fg_rgb );
+        }
+
+        $hsl = saasvibe_rgb_to_hsl( $fg_rgb );
+
+        // Candidates are measured after rounding to 8-bit hex, so the ratio
+        // checked here is the ratio the browser will actually render.
+        $at = function( $l ) use ( $hsl ) {
+            $hsl['l'] = $l;
+            return saasvibe_hex_to_rgb( saasvibe_rgb_to_hex( saasvibe_hsl_to_rgb( $hsl ) ) );
+        };
+
+        // Move away from the backgrounds: lighten on dark ones, darken on light.
+        // A saturated hue can top out below the target at one end, so the other
+        // direction is tried before giving up.
+        $sum = 0.0;
+        foreach ( $bg_list as $bg ) {
+            $sum += saasvibe_relative_luminance( $bg );
+        }
+        $bg_is_dark = ( $sum / count( $bg_list ) ) < 0.1791;
+        $directions = $bg_is_dark ? [ 1.0, 0.0 ] : [ 0.0, 1.0 ];
+
+        foreach ( $directions as $bound ) {
+            if ( $worst( $at( $bound ) ) < $target ) {
+                continue;
+            }
+
+            // Smallest lightness shift that still passes, so the adjusted color
+            // stays as close to the user's pick as possible.
+            $near = $hsl['l'];
+            $far  = $bound;
+
+            for ( $i = 0; $i < 24; $i++ ) {
+                $mid = ( $near + $far ) / 2;
+
+                if ( $worst( $at( $mid ) ) >= $target ) {
+                    $far = $mid;
+                } else {
+                    $near = $mid;
+                }
+            }
+
+            return saasvibe_rgb_to_hex( $at( $far ) );
+        }
+
+        // Fully desaturated fallback: black or white, whichever the backgrounds take.
+        return saasvibe_contrast_color( $bg_list[0] );
+    }
+}
+
+/**
+ * Nudge a fill color's lightness until black or white text can clear $target on
+ * top of it, and no further. Mirrors legibleFill() in utils/color.js.
+ *
+ * Mid-tone colors around #767676 top out near 4.48:1 against both black and
+ * white -- no text color can rescue them, so the fill itself has to give. Every
+ * surface that carries text on a brand fill is painted with this rather than the
+ * raw pick, so no brand color leaves text under AA. Anything already clear of
+ * the band comes back untouched.
+ *
+ * @param array $rgb    Fill color channels.
+ * @param float $target Minimum contrast ratio.
+ * @return string Hex color whose ideal text color meets the target.
+ */
+if ( ! function_exists( 'saasvibe_legible_fill' ) ) {
+    function saasvibe_legible_fill( array $rgb, $target = SAASVIBE_AA_CONTRAST ) {
+        $best = function( array $color ) {
+            return max(
+                saasvibe_contrast_ratio( $color, [ 'r' => 255, 'g' => 255, 'b' => 255 ] ),
+                saasvibe_contrast_ratio( $color, [ 'r' => 0, 'g' => 0, 'b' => 0 ] )
+            );
+        };
+
+        if ( $best( $rgb ) >= $target ) {
+            return saasvibe_rgb_to_hex( $rgb );
+        }
+
+        $hsl = saasvibe_rgb_to_hsl( $rgb );
+        $at  = function( $l ) use ( $hsl ) {
+            $hsl['l'] = $l;
+            return saasvibe_hex_to_rgb( saasvibe_rgb_to_hex( saasvibe_hsl_to_rgb( $hsl ) ) );
+        };
+
+        // The band is narrow, so both exits are close. Take whichever is the
+        // smaller departure from the color the user picked.
+        $candidates = [];
+
+        foreach ( [ 0.0, 1.0 ] as $bound ) {
+            if ( $best( $at( $bound ) ) < $target ) {
+                continue;
+            }
+
+            $near = $hsl['l'];
+            $far  = $bound;
+
+            for ( $i = 0; $i < 24; $i++ ) {
+                $mid = ( $near + $far ) / 2;
+
+                if ( $best( $at( $mid ) ) >= $target ) {
+                    $far = $mid;
+                } else {
+                    $near = $mid;
+                }
+            }
+
+            $candidates[] = [ 'l' => $far, 'distance' => abs( $far - $hsl['l'] ) ];
+        }
+
+        if ( empty( $candidates ) ) {
+            return saasvibe_rgb_to_hex( $rgb );
+        }
+
+        usort( $candidates, function( $a, $b ) {
+            return $a['distance'] <=> $b['distance'];
+        } );
+
+        return saasvibe_rgb_to_hex( $at( $candidates[0]['l'] ) );
+    }
+}
+
+/**
+ * A translucent wash for hover fills, dividers and panel borders drawn on a
+ * brand-painted surface. Mirrors surfaceTint() in utils/color.js.
+ *
+ * The INVERSE of saasvibe_contrast_rgba(): it uses the channel furthest from the
+ * text color, so the fill slides the background away from the text rather than
+ * toward it. Washing a light brand chrome with black would darken it under its
+ * own dark labels and drop them below AA; lightening it further keeps them clear.
+ *
+ * @param array $rgb   Surface color channels.
+ * @param float $alpha Opacity, 0-1.
+ * @return string rgba() string.
+ */
+if ( ! function_exists( 'saasvibe_surface_rgba' ) ) {
+    function saasvibe_surface_rgba( array $rgb, $alpha ) {
+        $channel = '#FFFFFF' === saasvibe_contrast_color( $rgb ) ? 0 : 255;
+        return sprintf(
+            'rgba(%1$d,%1$d,%1$d,%2$s)',
+            $channel,
+            rtrim( rtrim( number_format( (float) $alpha, 2, '.', '' ), '0' ), '.' )
+        );
+    }
+}
+
+/**
+ * A translucent tint of the contrast color chosen for the given background --
+ * white tints on dark brand colors, black tints on light ones -- opaque enough
+ * to still clear $target. Used for idle labels, dividers and hover fills that
+ * sit on brand-painted chrome. Mirrors contrastTint() in utils/color.js.
+ *
+ * @param array $rgb    Background color channels.
+ * @param float $alpha  Preferred opacity, 0-1.
+ * @param float $target Minimum contrast ratio, 0 to skip the check.
+ * @return string rgba() string.
+ */
+if ( ! function_exists( 'saasvibe_contrast_rgba' ) ) {
+    function saasvibe_contrast_rgba( array $rgb, $alpha, $target = SAASVIBE_AA_CONTRAST, array $against = [] ) {
+        $channel   = '#FFFFFF' === saasvibe_contrast_color( $rgb ) ? 255 : 0;
+        $surfaces  = ! empty( $against ) ? $against : [ $rgb ];
+
+        // Composited channels are rounded to 8 bits, the way the browser will
+        // rasterize them -- checking the float would pass tints that render a
+        // shade short of the target.
+        $composite = function( $a ) use ( $channel, $rgb ) {
+            return [
+                'r' => round( $a * $channel + ( 1 - $a ) * $rgb['r'] ),
+                'g' => round( $a * $channel + ( 1 - $a ) * $rgb['g'] ),
+                'b' => round( $a * $channel + ( 1 - $a ) * $rgb['b'] ),
+            ];
+        };
+
+        $worst = function( $a ) use ( $composite, $surfaces ) {
+            $ratios = [];
+            foreach ( $surfaces as $surface ) {
+                $ratios[] = saasvibe_contrast_ratio( $composite( $a ), $surface );
+            }
+            return min( $ratios );
+        };
+
+        $resolved = (float) $alpha;
+
+        if ( $target > 0 && $worst( $resolved ) < $target ) {
+            // Contrast rises monotonically with alpha, and fully opaque is the
+            // contrast color itself -- the best this background can do.
+            $low  = $resolved;
+            $high = 1.0;
+
+            for ( $i = 0; $i < 16; $i++ ) {
+                $mid = ( $low + $high ) / 2;
+
+                if ( $worst( $mid ) >= $target ) {
+                    $high = $mid;
+                } else {
+                    $low = $mid;
+                }
+            }
+
+            // The emitted alpha carries two decimals, so round UP -- rounding down
+            // would ship a slightly thinner tint than the one just verified.
+            $resolved = min( 1.0, ceil( $high * 100 ) / 100 );
+        }
+
+        return sprintf(
+            'rgba(%1$d,%1$d,%1$d,%2$s)',
+            $channel,
+            rtrim( rtrim( number_format( $resolved, 2, '.', '' ), '0' ), '.' )
+        );
     }
 }
 
@@ -559,10 +1039,23 @@ add_action( 'admin_menu', function() {
         }
     }
 
+    // The plugin's own screen lives under Settings. Removing that menu for a user
+    // who can still manage options would strand them: no way back to this UI to
+    // undo the setting. Keep Settings reachable for those users; every other menu
+    // (and every other role) hides as configured.
+    $self_host = 'options-general.php';
+
     foreach ( array_keys( $hidden_ids ) as $item_id ) {
-        if ( isset( $id_to_slug[ $item_id ] ) ) {
-            remove_menu_page( $id_to_slug[ $item_id ] );
+        if ( ! isset( $id_to_slug[ $item_id ] ) ) {
+            continue;
         }
+
+        if ( $self_host === $id_to_slug[ $item_id ] && current_user_can( 'manage_options' ) ) {
+            Saasvibe_Logger::warning( 'Skipped hiding Settings for a user who can manage options (would remove access to this plugin).' );
+            continue;
+        }
+
+        remove_menu_page( $id_to_slug[ $item_id ] );
     }
 }, 999 );
 
@@ -580,11 +1073,16 @@ add_action( 'admin_enqueue_scripts', function() {
         return;
     }
 
+    // 'common' prints in the admin <head>, so #adminmenu does not exist yet when
+    // this runs -- without the readyState guard the logo was silently never
+    // injected on any page load.
     $js = sprintf(
-        '(function(){var m=document.getElementById("adminmenu");if(!m||document.querySelector(".saasvibe-sidebar-logo-container"))return;'
+        '(function(){function run(){var m=document.getElementById("adminmenu");'
+        . 'if(!m||document.querySelector(".saasvibe-sidebar-logo-container"))return;'
         . 'var li=document.createElement("li");li.className="saasvibe-sidebar-logo-container";'
         . 'var i=document.createElement("img");i.src=%1$s;i.alt=%2$s;li.appendChild(i);'
-        . 'm.insertBefore(li,m.firstChild);})();',
+        . 'm.insertBefore(li,m.firstChild);}'
+        . 'if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",run);}else{run();}})();',
         wp_json_encode( esc_url( $logo ) ),
         wp_json_encode(
             /* translators: %s: site name, used as the sidebar logo alt text. */
@@ -649,6 +1147,9 @@ add_action( 'admin_enqueue_scripts', function() {
 
     // Pick black or white text for legibility against the chosen badge color so a
     // light badge (e.g. #FFEB3B) doesn't render white-on-light and fail contrast.
+    // The pill itself is painted with the legible fill, so a mid-tone badge color
+    // (where neither black nor white clears AA) is nudged clear of that band.
+    $color      = saasvibe_legible_fill( saasvibe_hex_to_rgb( $color ), saasvibe_contrast_target( $settings ) );
     $text_color = saasvibe_contrast_color( saasvibe_hex_to_rgb( $color ) );
 
     $css = sprintf(

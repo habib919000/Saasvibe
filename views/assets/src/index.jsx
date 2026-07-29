@@ -17,6 +17,13 @@ import {
 } from 'lucide-react';
 
 import useApi from '@hooks/useApi';
+import {
+	brandHoverTint,
+	contrastTargetFor,
+	idealTextColor,
+	legibleFill,
+	safeHex,
+} from './utils/color';
 import TemplateSelector from './components/TemplateSelector';
 import ColorCustomizer from './components/ColorCustomizer';
 import MenuPreview from './components/MenuPreview';
@@ -51,6 +58,7 @@ const App = () => {
 	const [ settings, setSettings ] = useState( {
 		templateId: 'linear-dark',
 		brandColor: '',
+		contrastLevel: 'aa',
 		density: 'normal',
 		customLogo: '',
 		topBarHeight: 46,
@@ -90,42 +98,38 @@ const App = () => {
 	);
 
 	useEffect( () => {
-		const brandColor = settings.brandColor || window.Saasvibe_Vars?.wp_brand_color || '#5E6AD2';
+		const brandColor = safeHex(
+			settings.brandColor || window.Saasvibe_Vars?.wp_brand_color
+		);
 		const root = document.getElementById( 'saasvibe-app' );
 		if ( root ) {
-			const hexToRgb = ( hex ) => {
-				hex = hex.replace( '#', '' );
-				if ( hex.length === 3 ) {
-					hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-				}
-				const num = parseInt( hex, 16 );
-				return {
-					r: ( num >> 16 ) & 255,
-					g: ( num >> 8 ) & 255,
-					b: num & 255,
-				};
-			};
-
-			const getContrastColor = ( rgb ) => {
-				const luminance = ( 0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b ) / 255;
-				return luminance > 0.5 ? '#000000' : '#FFFFFF';
-			};
-
 			try {
-				const rgb = hexToRgb( brandColor );
-				const hoverColor = `rgba(${ rgb.r }, ${ rgb.g }, ${ rgb.b }, 0.10)`;
-				const textColor = getContrastColor( rgb );
+				// Surfaces that carry text use the legible fill, so a mid-tone
+				// brand color cannot leave the settings UI's own buttons and
+				// badges under AA either.
+				const fill = legibleFill(
+					brandColor,
+					contrastTargetFor( settings.contrastLevel )
+				);
 
 				root.style.setProperty( '--saasvibe-brand-color', brandColor );
-				root.style.setProperty( '--saasvibe-brand-hover-color', hoverColor );
-				root.style.setProperty( '--saasvibe-brand-text-color', textColor );
+				root.style.setProperty( '--saasvibe-brand-fill', fill );
+				root.style.setProperty(
+					'--saasvibe-brand-hover-color',
+					brandHoverTint( brandColor )
+				);
+				root.style.setProperty(
+					'--saasvibe-brand-text-color',
+					idealTextColor( fill )
+				);
 			} catch ( e ) {
 				root.style.setProperty( '--saasvibe-brand-color', '#5E6AD2' );
+				root.style.setProperty( '--saasvibe-brand-fill', '#5E6AD2' );
 				root.style.setProperty( '--saasvibe-brand-hover-color', 'rgba(94, 106, 210, 0.10)' );
 				root.style.setProperty( '--saasvibe-brand-text-color', '#FFFFFF' );
 			}
 		}
-	}, [ settings.brandColor ] );
+	}, [ settings.brandColor, settings.contrastLevel ] );
 
 	// Get active template info
 	const templates = window.Saasvibe_Vars?.templates || [];
@@ -663,6 +667,18 @@ const App = () => {
 									<p className="text-sm text-slate-500 mt-1">
 										{ __(
 											'Select which WordPress user roles should hide specific navigation menu items.',
+											'saasvibe'
+										) }
+									</p>
+									<p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+										<strong className="font-semibold">
+											{ __(
+												'Visibility only, not access control. ',
+												'saasvibe'
+											) }
+										</strong>
+										{ __(
+											'Hiding a menu removes it from the sidebar for that role. It does not revoke any capability — a user who knows the URL can still open the screen. Use a roles and capabilities plugin when you need to actually restrict access. Settings stays visible to anyone who can manage options, so this screen cannot lock itself away.',
 											'saasvibe'
 										) }
 									</p>

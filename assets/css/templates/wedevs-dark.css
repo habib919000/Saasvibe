@@ -18,7 +18,7 @@
 
 #wpcontent,
 #wpfooter {
-    margin-left: var(--saasvibe-sidebar-width, 240px) !important;
+    margin-inline-start: var(--saasvibe-sidebar-width, 240px) !important;
 }
 
 /* Collapsed sidebar compatibility */
@@ -30,7 +30,7 @@
 
 .folded #wpcontent,
 .folded #wpfooter {
-    margin-left: 60px !important;
+    margin-inline-start: 60px !important;
 }
 
 /* Top bar Height & Background Override */
@@ -109,7 +109,7 @@ html.wp-toolbar {
 #wpadminbar .ab-item:hover .ab-icon::before,
 #wpadminbar .ab-item:hover .dashicons,
 #wpadminbar .ab-item:hover .dashicons::before {
-    color: var(--saasvibe-brand-color, #FF5858) !important;
+    color: var(--saasvibe-brand-accent, #FF5858) !important;
 }
 
 #wpadminbar #wp-admin-bar-root-default > li:hover > .ab-item,
@@ -125,8 +125,8 @@ html.wp-toolbar {
 }
 
 #wpadminbar .ab-submenu .ab-item:hover {
-    color: #FFFFFF !important;
-    background-color: var(--saasvibe-brand-color, #FF5858) !important;
+    color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
+    background-color: var(--saasvibe-brand-fill, #FF5858) !important;
 }
 
 /* 3. Sidebar (#adminmenu) Styling
@@ -200,9 +200,9 @@ html.wp-toolbar {
 #adminmenu li.wp-has-current-submenu.wp-menu-open > a.menu-top,
 #adminmenu li.current > a.menu-top,
 #adminmenu li.wp-has-current-submenu:hover > a.menu-top {
-    color: var(--saasvibe-brand-color, #FF5858) !important;
+    color: var(--saasvibe-brand-accent, #FF5858) !important;
     background-color: transparent !important;
-    border-left: none !important;
+    border-inline-start: none !important;
 }
 
 /* Expand/collapse chevron for items that own a submenu (dashicons glyphs). */
@@ -290,7 +290,9 @@ html.wp-toolbar {
     margin: 2px 12px !important;
     /* 36px = core .wp-menu-image gutter, so submenu text lands under the
        parent's label rather than its icon. */
-    padding: 8px 12px 8px calc(var(--saasvibe-menu-item-padding-left, 12px) + 36px) !important;
+    padding: 8px 12px !important;
+    /* Logical inset so the indent follows the reading direction in RTL. */
+    padding-inline-start: calc(var(--saasvibe-menu-item-padding-left, 12px) + 36px) !important;
     transition: background-color 150ms ease, color 150ms ease !important;
 }
 
@@ -321,7 +323,7 @@ html.wp-toolbar {
 #adminmenu .wp-submenu li.current a:hover,
 #adminmenu .wp-submenu li.current a:focus {
     color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
-    background-color: var(--saasvibe-brand-color, #FF5858) !important;
+    background-color: var(--saasvibe-brand-fill, #FF5858) !important;
     box-shadow: none !important;
     font-weight: 500 !important;
 }
@@ -349,7 +351,7 @@ html.wp-toolbar {
 
 /* Submenu headers (the repeated parent title WP prepends) stay quiet. */
 #adminmenu .wp-submenu .wp-submenu-head {
-    color: #71717A !important;
+    color: var(--saasvibe-chrome-head, #818189) !important; /* Lightened from #71717A: the old grey sat at 4.35:1 on the flyout panel, under AA. */
     padding: 8px 14px !important;
 }
 
@@ -394,12 +396,12 @@ html.wp-toolbar {
 #adminmenu li.wp-has-current-submenu:hover div.wp-menu-image::before,
 #adminmenu li.wp-has-current-submenu svg.wp-menu-image,
 #adminmenu li.current svg.wp-menu-image {
-    color: var(--saasvibe-brand-color, #FF5858) !important;
+    color: var(--saasvibe-brand-accent, #FF5858) !important;
 }
 
 /* 6. Collapse Button */
 #collapse-button {
-    color: #A1A1AA !important;
+    color: var(--saasvibe-chrome-control, #A1A1AA) !important;
     margin: 8px 12px !important;
     border-radius: 40px !important;
     transition: background-color 150ms ease !important;
@@ -452,8 +454,8 @@ html.wp-toolbar {
 
 /* The active submenu item keeps its brand fill when focused; only the ring is added. */
 #adminmenu .wp-submenu li.current a:focus-visible {
-    background-color: var(--saasvibe-brand-color, #FF5858) !important;
-    outline-color: #FFFFFF !important;
+    background-color: var(--saasvibe-brand-fill, #FF5858) !important;
+    outline-color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
 }
 
 #wpadminbar .ab-item:focus-visible,
@@ -478,7 +480,7 @@ html.wp-toolbar {
     }
     .auto-fold #wpcontent,
     .auto-fold #wpfooter {
-        margin-left: 36px !important;
+        margin-inline-start: 36px !important;
     }
     /* Same rail treatment as .folded, applied only once auto-fold really folds. */
     .auto-fold #adminmenu a.menu-top {
@@ -510,7 +512,7 @@ html.wp-toolbar {
     .auto-fold #adminmenuback,
     .auto-fold #adminmenuwrap {
         width: 190px !important;
-        margin-left: -190px !important;
+        margin-inline-start: -190px !important;
     }
     #adminmenu,
     #adminmenu .wp-submenu,
@@ -518,17 +520,17 @@ html.wp-toolbar {
     .auto-fold #adminmenu .wp-submenu {
         width: 190px !important;
         min-width: 0 !important;
-        margin-left: 0 !important;
+        margin-inline-start: 0 !important;
     }
     #wpcontent,
     #wpfooter,
     .auto-fold #wpcontent,
     .auto-fold #wpfooter {
-        margin-left: 0 !important;
+        margin-inline-start: 0 !important;
     }
     .wp-responsive-open #wpcontent,
     .wp-responsive-open #wpfooter {
-        margin-left: 190px !important;
+        margin-inline-start: 190px !important;
     }
     #wpadminbar {
         height: 46px !important;
@@ -537,5 +539,53 @@ html.wp-toolbar {
     }
     body.admin-bar #wpbody {
         padding-top: 46px !important;
+    }
+}
+
+/* ============================================================
+ * 7. Accessibility fallbacks
+ * ============================================================ */
+
+/* The colour and background transitions on menu items are decorative, so drop
+   them when the visitor has asked for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+    #adminmenu a.menu-top,
+    #adminmenu .wp-submenu a,
+    #adminmenu div.wp-menu-image::before,
+    #adminmenu li.wp-has-submenu > a.menu-top::after,
+    #wpadminbar .ab-item,
+    #wpadminbar .ab-icon,
+    #wpadminbar .ab-icon::before,
+    #wpadminbar .dashicons::before,
+    #collapse-button {
+        transition: none !important;
+    }
+}
+
+/* Windows High Contrast and other forced-colours modes replace the palette
+   wholesale. The brand fill disappears there, so the active row is re-marked
+   with the system highlight and focus rings are redrawn in system colours --
+   otherwise the only cue for "where am I" would be a colour that no longer
+   renders. */
+@media (forced-colors: active) {
+    #adminmenu li.current > a.menu-top,
+    #adminmenu li.wp-has-current-submenu > a.menu-top,
+    #adminmenu .wp-submenu li.current a {
+        background-color: Highlight !important;
+        color: HighlightText !important;
+    }
+
+    #adminmenu div.wp-menu-image::before,
+    #adminmenu li.wp-has-submenu > a.menu-top::after {
+        color: inherit !important;
+    }
+
+    #adminmenu a.menu-top:focus-visible,
+    #adminmenu .wp-submenu a:focus-visible,
+    #wpadminbar a:focus-visible,
+    #wpadminbar .ab-item:focus-visible,
+    #collapse-button:focus-visible {
+        outline: 2px solid CanvasText !important;
+        outline-offset: -2px !important;
     }
 }

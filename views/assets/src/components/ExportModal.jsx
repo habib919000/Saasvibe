@@ -36,7 +36,7 @@ export const ExportModal = ( { isOpen, onClose, onImportSuccess } ) => {
 		const permission = window.Saasvibe_Vars?.permission || '';
 
 		// Trigger a direct browser file download by redirecting to our REST export route
-		window.location.href = `${ restUrl }settings/export?is_admin=true&_wpnonce=${ permission }`;
+		window.location.href = `${ restUrl }settings/export?_wpnonce=${ permission }`;
 	};
 
 	const handleImportClick = () => {
@@ -65,13 +65,18 @@ export const ExportModal = ( { isOpen, onClose, onImportSuccess } ) => {
 		const reader = new FileReader();
 		reader.onload = async ( event ) => {
 			try {
-				const jsonContent = JSON.parse( event.target?.result );
+				const raw = String( event.target?.result || '' );
 
-				// Call standard REST API importer
-				const response = await api.post(
-					'settings/import',
-					jsonContent
-				);
+				// Parse first so a malformed file fails here with a clear
+				// message rather than as a 400 from the server.
+				JSON.parse( raw );
+
+				// The importer takes the raw document under `content`; posting
+				// the parsed object instead left content empty and every import
+				// failed with "No settings provided".
+				const response = await api.post( 'settings/import', {
+					content: raw,
+				} );
 
 				if ( response.success ) {
 					setImportStatus( 'success' );
