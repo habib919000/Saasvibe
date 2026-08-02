@@ -159,12 +159,9 @@ Yes. Visit our documentation at https://github.com/habib919000/Saasvibe for guid
 
 == Screenshots ==
 
-1. **Templates Tab** — Browse and preview all available design templates with live interface preview
-2. **Colors & Sizing** — Brand color picker with WCAG contrast validation and sizing controls
-3. **Role Visibility** — Fine-grained matrix for showing/hiding menu items per user role
-4. **Onboarding Wizard** — Quick 60-second setup process for new installations
-5. **Linear Dark Theme** — Sleek dark design applied to WordPress dashboard
-6. **Settings Management** — Complete customization interface with real-time preview
+1. A dark design template applied across the WordPress admin dashboard.
+2. A clean, light design template applied across the admin dashboard.
+3. A dark template with a custom brand color and logo applied to the admin.
 
 == Changelog ==
 
