@@ -94,7 +94,7 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 
 	// Signature corner radius per template.
 	const activeFillRadius =
-		activeTemplate.id === 'wedevs-dark'
+		activeTemplate.id === 'dev-dark'
 			? '9999px'
 			: activeTemplate.id === 'vercel-minimal'
 			? '4px'

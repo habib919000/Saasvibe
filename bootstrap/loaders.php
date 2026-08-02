@@ -334,6 +334,11 @@ add_action( 'admin_enqueue_scripts', function() {
             return;
         }
 
+        // A site saved before a template was renamed still holds the old id, and
+        // the stylesheet it names is gone -- without this the admin would quietly
+        // lose its styling until the user re-picked a template.
+        $template_id = \Saasvibe\Controllers\Template_Controller::resolve_template_id( $template_id );
+
         // Resolve template stylesheet (guard against path traversal).
         $safe_id   = sanitize_file_name( $template_id );
         $css_path  = SAASVIBE_PATH . 'assets/css/templates/' . $safe_id . '.css';

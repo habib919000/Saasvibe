@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Reduced-motion and forced-colours support**: All four templates now drop their decorative colour transitions under `prefers-reduced-motion: reduce`, and re-mark the active row with the system highlight plus system-coloured focus rings under `forced-colors: active`, where the brand fill is stripped by the OS.
 
+### Changed
+- **weDevs Dark is now Dev Dark**: The template and its stylesheet were renamed (`wedevs-dark` → `dev-dark`), and its design reference now reads "Dark UI". Sites already using it keep working — the stored id is mapped to the new one on read and on save, so no site loses its styling or fails validation after updating.
+
 ### Removed
 - **Licence tab and tiering**: The License tab activated nothing — it checked whether the key began with `PRO-` or `AGENCY-`, reported "License activated successfully!", and contacted no server. The flag it set (`is_pro`) was never emitted by PHP, so it read as `false` on every page load: export and import were permanently disabled for everyone, and the "PRO ONLY" template lock could never trigger since all four templates are free. The tab, the tier badges, the upsell notice, and the client-side gating are gone; export and import are available to anyone who can manage options, authorised server-side via `saasvibe_can_transfer_settings()`.
 

@@ -71,11 +71,11 @@ class Template_Controller {
                 'mutedColors'   => [ 'icon' => '', 'head' => '', 'control' => '' ],
             ],
             [
-                'id'            => 'wedevs-dark',
-                'name'          => __( 'weDevs Dark', 'saasvibe' ),
+                'id'            => 'dev-dark',
+                'name'          => __( 'Dev Dark', 'saasvibe' ),
                 'style'         => 'sidebar',
                 'tier'          => 'free',
-                'designRef'     => 'weDevs',
+                'designRef'     => 'Dark UI',
                 'defaultColors' => [
                     'background' => '#000000',
                     'text'       => '#FFFFFF',
@@ -293,7 +293,7 @@ class Template_Controller {
         $validated = [];
         
         // Validate template ID
-        $template_id = $settings['templateId'] ?? 'linear-dark';
+        $template_id = self::resolve_template_id( $settings['templateId'] ?? 'linear-dark' );
         if ( ! $this->is_valid_template( $template_id ) ) {
             return new \WP_Error(
                 'invalid_template',
@@ -450,6 +450,24 @@ class Template_Controller {
      */
     private function validate_hex_color( string $color ): bool {
         return (bool) preg_match( '/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $color );
+    }
+
+    /**
+     * Map a stored template id onto its current one.
+     *
+     * Renaming a template would otherwise strand every site already using it:
+     * the id fails validation on the next save, and the chrome hook looks for a
+     * stylesheet that no longer exists, so the admin silently loses its styling.
+     *
+     * @param string $template_id Stored id.
+     * @return string Current id.
+     */
+    public static function resolve_template_id( string $template_id ): string {
+        $renamed = [
+            'wedevs-dark' => 'dev-dark',
+        ];
+
+        return $renamed[ $template_id ] ?? $template_id;
     }
 
     /**
