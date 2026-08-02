@@ -51,7 +51,12 @@ html.wp-toolbar {
 }
 
 /* 2. Top Bar (#wpadminbar) Styling */
-#wpadminbar *:not(.ab-icon):not(.dashicons):not(.dashicons-before):not(.dashicons-before::before) {
+/* A pseudo-element inside :not() is invalid at every Selectors level, and an
+   invalid argument invalidates the whole selector -- this rule used to carry
+   :not(.dashicons-before::before) and was therefore dropped by every browser,
+   leaving the admin bar on core's light grey. The env badge is excluded so it
+   keeps the text colour derived for its own pill. */
+#wpadminbar *:not(.ab-icon):not(.dashicons):not(.dashicons-before):not(.saasvibe-env-badge) {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     color: #FFFFFF !important;
 }
@@ -491,6 +496,27 @@ html.wp-toolbar {
 /* ============================================================
  * 7. Accessibility fallbacks
  * ============================================================ */
+
+/* Core's "Skip to main content" shortcut is invisible until it takes keyboard
+   focus, and it renders in core's palette on a top bar we have repainted. Pin it
+   to this template's own surface so the first thing a keyboard user reaches is
+   legible. */
+#wpadminbar .screen-reader-shortcut:focus,
+#adminmenuwrap .screen-reader-shortcut:focus,
+.screen-reader-text:focus {
+    background: #111111 !important;
+    color: #FFFFFF !important;
+    outline: 2px solid var(--saasvibe-brand-accent, #FFFFFF) !important;
+    outline-offset: 2px !important;
+    text-decoration: none !important;
+    clip: auto !important;
+    clip-path: none !important;
+    height: auto !important;
+    width: auto !important;
+    padding: 10px 14px !important;
+    border-radius: 6px !important;
+    z-index: 100000 !important;
+}
 
 /* The colour and background transitions on menu items are decorative, so drop
    them when the visitor has asked for reduced motion. */

@@ -1153,7 +1153,7 @@ add_action( 'admin_enqueue_scripts', function() {
     $text_color = saasvibe_contrast_color( saasvibe_hex_to_rgb( $color ) );
 
     $css = sprintf(
-        '#wpadminbar .saasvibe-env-badge{display:inline-block;background:%1$s;color:%2$s;'
+        '#wpadminbar .saasvibe-env-badge{display:inline-block;background:%1$s !important;color:%2$s !important;'
         . 'font-size:11px;font-weight:600;line-height:1.6;padding:0 10px;border-radius:9999px;'
         . 'letter-spacing:.02em;}'
         . '#wpadminbar #wp-admin-bar-saasvibe-env-badge .ab-item{background:transparent !important;}',
