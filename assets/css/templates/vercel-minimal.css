@@ -260,7 +260,9 @@ html.wp-toolbar {
        parent's label rather than its icon. */
     padding: 8px 12px !important;
     /* Logical inset so the indent follows the reading direction in RTL. */
-    padding-inline-start: calc(var(--saasvibe-menu-item-padding-left, 12px) + 36px) !important;
+    /* 8px anchor inset + core's 36px icon gutter, so submenu labels start
+       on the same x as the parent's label. */
+    padding-inline-start: calc(8px + 36px) !important;
     transition: background-color 120ms ease, color 120ms ease !important;
 }
 
@@ -587,8 +589,15 @@ html.wp-toolbar {
     vertical-align: middle !important;
 }
 
+/* WordPress puts the label at 36px from the row's content edge -- core floats a
+   36px icon box and pads .wp-menu-name by exactly that much, so the only space
+   after the 20px glyph is the 8px left over inside the box. The density
+   shorthand adds its horizontal value on top of the flex icon box, doubling
+   that gutter to 20px and eating label width, so it is dropped on the leading
+   edge. Density still drives the vertical rhythm. */
 #adminmenu a.menu-top div.wp-menu-name {
     flex: 1 1 auto !important;
+    padding-inline-start: 0 !important;
 }
 
 /* Folded rail: no label to sit beside, so the icon centres in the 60px rail. */
