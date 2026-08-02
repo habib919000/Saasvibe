@@ -1064,10 +1064,15 @@ add_action( 'admin_menu', function() {
     }
 }, 999 );
 
-// --- Custom sidebar logo ----------------------------------------------------
-// WP has no native sidebar header, so inject a logo container at the top of
-// #adminmenu. The template stylesheets already style .saasvibe-sidebar-logo-container.
-add_action( 'admin_enqueue_scripts', function() {
+// --- Custom site logo -------------------------------------------------------
+// The logo replaces the house glyph on the toolbar's site-name node, so it sits
+// where WordPress already puts the site's identity. Two shapes:
+//
+//   icon - a square mark alongside the site name, the way core pairs its glyph
+//          with the name.
+//   full - a wordmark on its own; the name is dropped, since a wordmark already
+//          carries it.
+add_action( 'admin_bar_menu', function( $wp_admin_bar ) {
     $settings = saasvibe_get_applied_settings();
     if ( null === $settings ) {
         return;
@@ -1078,26 +1083,61 @@ add_action( 'admin_enqueue_scripts', function() {
         return;
     }
 
-    // 'common' prints in the admin <head>, so #adminmenu does not exist yet when
-    // this runs -- without the readyState guard the logo was silently never
-    // injected on any page load.
-    $js = sprintf(
-        '(function(){function run(){var m=document.getElementById("adminmenu");'
-        . 'if(!m||document.querySelector(".saasvibe-sidebar-logo-container"))return;'
-        . 'var li=document.createElement("li");li.className="saasvibe-sidebar-logo-container";'
-        . 'var i=document.createElement("img");i.src=%1$s;i.alt=%2$s;li.appendChild(i);'
-        . 'm.insertBefore(li,m.firstChild);}'
-        . 'if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",run);}else{run();}})();',
-        wp_json_encode( esc_url( $logo ) ),
-        wp_json_encode(
-            /* translators: %s: site name, used as the sidebar logo alt text. */
-            sprintf( __( '%s logo', 'saasvibe' ), get_bloginfo( 'name' ) )
-        )
+    // Nothing to attach to if the site name was hidden in the top-bar settings.
+    if ( ! $wp_admin_bar->get_node( 'site-name' ) ) {
+        return;
+    }
+
+    $type = 'full' === ( $settings['logoType'] ?? 'icon' ) ? 'full' : 'icon';
+    $name = get_bloginfo( 'name' );
+
+    $img = sprintf(
+        '<img src="%1$s" alt="%2$s" class="saasvibe-site-logo saasvibe-site-logo--%3$s" />',
+        esc_url( $logo ),
+        esc_attr(
+            'full' === $type
+                ? $name
+                /* translators: %s: site name, used as the logo's alt text. */
+                : sprintf( __( '%s logo', 'saasvibe' ), $name )
+        ),
+        esc_attr( $type )
     );
 
-    // 'common' is enqueued on every admin page.
-    wp_add_inline_script( 'common', $js );
-}, 20 );
+    $wp_admin_bar->add_node( [
+        'id'    => 'site-name',
+        'title' => 'full' === $type
+            ? $img
+            : $img . '<span class="saasvibe-site-logo-name">' . esc_html( $name ) . '</span>',
+    ] );
+}, 999 );
+
+// Size the logo against the configured bar height and suppress core's house
+// glyph, which would otherwise sit next to it.
+add_action( 'admin_enqueue_scripts', function() {
+    $settings = saasvibe_get_applied_settings();
+    if ( null === $settings || empty( $settings['customLogo'] ) ) {
+        return;
+    }
+
+    // A short bar would otherwise shrink the logo to nothing, so the height is
+    // floored -- overflow is hidden by the bar rather than the logo vanishing.
+    $css = '#wpadminbar #wp-admin-bar-site-name > .ab-item::before{display:none !important;}'
+        . '#wpadminbar .saasvibe-site-logo{display:inline-block !important;width:auto !important;'
+        . 'vertical-align:middle !important;object-fit:contain !important;}'
+        . '#wpadminbar .saasvibe-site-logo--icon{height:auto !important;'
+        . 'max-height:clamp(16px, calc(var(--saasvibe-topbar-height, 46px) - 14px), 28px) !important;'
+        . 'max-width:40px !important;margin-inline-end:8px !important;}'
+        . '#wpadminbar .saasvibe-site-logo--full{height:auto !important;'
+        . 'max-height:clamp(18px, calc(var(--saasvibe-topbar-height, 46px) - 12px), 40px) !important;'
+        . 'max-width:180px !important;}'
+        . '#wpadminbar .saasvibe-site-logo-name{vertical-align:middle !important;}';
+
+    if ( wp_style_is( 'saasvibe-template', 'enqueued' ) ) {
+        wp_add_inline_style( 'saasvibe-template', $css );
+    } else {
+        wp_add_inline_style( 'admin-bar', $css );
+    }
+}, 21 );
 
 // --- Environment badge + hidden top-bar items -------------------------------
 add_action( 'admin_bar_menu', function( $wp_admin_bar ) {

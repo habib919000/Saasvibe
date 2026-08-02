@@ -337,9 +337,67 @@ export const ColorCustomizer = ( { settings, onChange, activeTemplate } ) => {
 								{ __( 'Upload Logo (PNG/SVG)', 'saasvibe' ) }
 							</button>
 						) }
+						{ settings.customLogo && (
+							<fieldset className="pt-1">
+								<legend className="text-xs font-semibold text-slate-700">
+									{ __( 'Logo type', 'saasvibe' ) }
+								</legend>
+								<div className="mt-2 space-y-2">
+									{ [
+										{
+											value: 'icon',
+											label: __( 'Logo icon', 'saasvibe' ),
+											hint: __(
+												'A square mark shown next to the site name.',
+												'saasvibe'
+											),
+										},
+										{
+											value: 'full',
+											label: __( 'Full logo', 'saasvibe' ),
+											hint: __(
+												'A wordmark shown on its own. The site name is hidden, since the wordmark already carries it.',
+												'saasvibe'
+											),
+										},
+									].map( ( option ) => (
+										<label
+											key={ option.value }
+											className="flex items-start gap-2.5 cursor-pointer"
+										>
+											<input
+												type="radio"
+												name="saasvibe-logo-type"
+												value={ option.value }
+												checked={
+													( settings.logoType ||
+														'icon' ) === option.value
+												}
+												onChange={ () =>
+													onChange(
+														'logoType',
+														option.value
+													)
+												}
+												className="mt-0.5 border-slate-300 text-indigo-600 focus:ring-indigo-500"
+											/>
+											<span>
+												<span className="block text-xs font-medium text-slate-700">
+													{ option.label }
+												</span>
+												<span className="block text-[11px] text-slate-400">
+													{ option.hint }
+												</span>
+											</span>
+										</label>
+									) ) }
+								</div>
+							</fieldset>
+						) }
+
 						<p className="text-[11px] text-slate-400">
 							{ __(
-								'Max recommended size: 200px wide by 60px high. SVG or transparent PNG preferred.',
+								'Shown on the toolbar beside the site name. Height follows your top bar setting, so a transparent PNG or SVG around 200px wide works best.',
 								'saasvibe'
 							) }
 						</p>

@@ -405,34 +405,7 @@ html.wp-toolbar {
     color: inherit !important;
 }
 
-/* Custom logo styling inside sidebar */
-.saasvibe-sidebar-logo-container {
-    height: var(--saasvibe-topbar-height, 46px) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-sizing: border-box !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-    margin-bottom: 10px !important;
-}
-
-.saasvibe-sidebar-logo-container img {
-    max-width: 100% !important;
-    max-height: calc(var(--saasvibe-topbar-height, 46px) - 16px) !important;
-    width: auto !important;
-    height: auto !important;
-    object-fit: contain !important;
-}
-
-.folded .saasvibe-sidebar-logo-container {
-    padding: 8px !important;
-}
-
-.folded .saasvibe-sidebar-logo-container img {
-    max-height: 24px !important;
-}
-
-/* 7. Accessibility & Focus Highlights */
+.folded .folded /* 7. Accessibility & Focus Highlights */
 #adminmenu a.menu-top:focus-visible,
 #adminmenu .wp-submenu a:focus-visible,
 #collapse-button:focus-visible {

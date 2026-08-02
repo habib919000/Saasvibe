@@ -347,6 +347,18 @@ class Template_Controller {
         }
         $validated['contrastLevel'] = $contrast_level;
 
+        // Validate logo type. 'icon' pairs a square mark with the site name;
+        // 'full' shows a wordmark on its own and drops the name.
+        $logo_type = $settings['logoType'] ?? 'icon';
+        if ( ! in_array( $logo_type, [ 'icon', 'full' ], true ) ) {
+            return new \WP_Error(
+                'invalid_logo_type',
+                __( 'Logo type must be "icon" or "full"', 'saasvibe' ),
+                [ 'status' => 400 ]
+            );
+        }
+        $validated['logoType'] = $logo_type;
+
         // Validate density
         $density = $settings['density'] ?? 'normal';
         if ( ! in_array( $density, [ 'normal', 'compact', 'relaxed' ], true ) ) {
@@ -497,6 +509,7 @@ class Template_Controller {
             'brandColor'      => '#5E6AD2',
             'contrastLevel'   => 'aa',
             'customLogo'      => '',
+            'logoType'        => 'icon',
             'density'         => 'normal',
             'topBarHeight'    => 46,
             'sidebarWidth'    => 240,

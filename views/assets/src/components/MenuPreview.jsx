@@ -29,6 +29,7 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 	const sidebarWidth = settings.sidebarWidth || 240;
 	const topBarHeight = settings.topBarHeight || 46;
 	const customLogo = settings.customLogo || '';
+	const logoType = settings.logoType || 'icon';
 	const density = settings.density || 'normal';
 
 	const brandHover = brandHoverTint( brandColor );
@@ -174,17 +175,9 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 							} }
 							className="flex items-center justify-center p-3 select-none"
 						>
-							{ customLogo ? (
-								<img
-									src={ customLogo }
-									alt="Mock logo"
-									className="max-h-6 max-w-full object-contain"
-								/>
-							) : (
-								<span className="text-xs font-bold truncate opacity-80 uppercase tracking-wider">
-									{ __( 'WordPress Title', 'saasvibe' ) }
-								</span>
-							) }
+							<span className="text-xs font-bold truncate opacity-80 uppercase tracking-wider">
+								{ __( 'WordPress Title', 'saasvibe' ) }
+							</span>
 						</div>
 
 						{ /* Mock Menu Items */ }
@@ -244,8 +237,51 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 							{ /* Left Node */ }
 							<div className="flex items-center gap-3">
 								{ ! settings.hideTopBarItems?.siteName && (
-									<span className="text-xs font-medium truncate opacity-70">
-										{ __( 'Visit Site', 'saasvibe' ) }
+									<span className="flex items-center gap-2 min-w-0">
+										{ /* Mirrors the toolbar: the icon shape
+										     sits beside the site name, the full
+										     logo replaces it. */ }
+										{ customLogo && (
+											<img
+												src={ customLogo }
+												alt="Mock logo"
+												style={ {
+													maxHeight: `${
+														logoType === 'full'
+															? Math.min(
+																	40,
+																	Math.max(
+																		18,
+																		topBarHeight -
+																			12
+																	)
+															  )
+															: Math.min(
+																	28,
+																	Math.max(
+																		16,
+																		topBarHeight -
+																			14
+																	)
+															  )
+													}px`,
+													maxWidth:
+														logoType === 'full'
+															? '120px'
+															: '32px',
+												} }
+												className="object-contain shrink-0"
+											/>
+										) }
+										{ ( ! customLogo ||
+											logoType === 'icon' ) && (
+											<span className="text-xs font-medium truncate opacity-70">
+												{ __(
+													'Visit Site',
+													'saasvibe'
+												) }
+											</span>
+										) }
 									</span>
 								) }
 								{ settings.environmentBadge?.enabled && (

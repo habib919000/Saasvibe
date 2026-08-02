@@ -53,6 +53,7 @@ function saasvibe_activate_plugin() {
         'brandColor'         => '',
         'density'            => 'normal',
         'customLogo'         => '',
+        'logoType'           => 'icon',
         'topBarHeight'       => 46,
         'sidebarWidth'       => 240,
         'environmentBadge'   => [
