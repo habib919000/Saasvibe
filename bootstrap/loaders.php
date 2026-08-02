@@ -397,7 +397,7 @@ add_action( 'admin_enqueue_scripts', function() {
         if ( empty( $brand ) ) {
             $brand = $wp_brand_color;
         }
-        $sidebar = (int) ( $settings['sidebarWidth'] ?? 240 );
+        $sidebar = (int) ( $settings['sidebarWidth'] ?? 200 );
         $topbar  = (int) ( $settings['topBarHeight'] ?? 46 );
         $density = $settings['density'] ?? 'normal';
 

@@ -372,7 +372,7 @@ class Template_Controller {
         
         // Validate numeric values
         $validated['topBarHeight'] = absint( $settings['topBarHeight'] ?? 46 );
-        $validated['sidebarWidth'] = absint( $settings['sidebarWidth'] ?? 240 );
+        $validated['sidebarWidth'] = absint( $settings['sidebarWidth'] ?? 200 );
         
         if ( $validated['topBarHeight'] < 30 || $validated['topBarHeight'] > 200 ) {
             return new \WP_Error(
@@ -512,7 +512,7 @@ class Template_Controller {
             'logoType'        => 'icon',
             'density'         => 'normal',
             'topBarHeight'    => 46,
-            'sidebarWidth'    => 240,
+            'sidebarWidth'    => 200,
             'environmentBadge' => [
                 'enabled' => true,
                 'label'   => 'Development',

@@ -55,7 +55,7 @@ function saasvibe_activate_plugin() {
         'customLogo'         => '',
         'logoType'           => 'icon',
         'topBarHeight'       => 46,
-        'sidebarWidth'       => 240,
+        'sidebarWidth'       => 200,
         'environmentBadge'   => [
             'enabled' => true,
             'label'   => 'Development',

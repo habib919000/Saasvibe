@@ -26,7 +26,7 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 	const brandColor = safeHex(
 		settings.brandColor || window.Saasvibe_Vars?.wp_brand_color
 	);
-	const sidebarWidth = settings.sidebarWidth || 240;
+	const sidebarWidth = settings.sidebarWidth || 200;
 	const topBarHeight = settings.topBarHeight || 46;
 	const customLogo = settings.customLogo || '';
 	const logoType = settings.logoType || 'icon';

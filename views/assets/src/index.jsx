@@ -60,7 +60,7 @@ const App = () => {
 		density: 'normal',
 		customLogo: '',
 		topBarHeight: 46,
-		sidebarWidth: 240,
+		sidebarWidth: 200,
 		environmentBadge: {
 			enabled: true,
 			label: 'Development',

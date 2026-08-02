@@ -8,7 +8,7 @@
 #adminmenuwrap,
 #adminmenu,
 #adminmenu .wp-submenu {
-    width: var(--saasvibe-sidebar-width, 240px) !important;
+    width: var(--saasvibe-sidebar-width, 200px) !important;
 }
 
 #adminmenuback,
@@ -18,7 +18,7 @@
 
 #wpcontent,
 #wpfooter {
-    margin-inline-start: var(--saasvibe-sidebar-width, 240px) !important;
+    margin-inline-start: var(--saasvibe-sidebar-width, 200px) !important;
 }
 
 /* Collapsed sidebar compatibility */
