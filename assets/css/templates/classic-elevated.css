@@ -61,8 +61,13 @@ html.wp-toolbar {
     color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
 }
 
+/* Core draws some toolbar glyphs on .ab-icon spans and others straight on the
+   anchor's ::before -- the site-name house, the WP logo, my-account. The second
+   kind is not an .ab-icon, so it kept core's #a7aaad on chrome we repaint. */
 #wpadminbar .ab-icon,
 #wpadminbar .ab-icon::before,
+#wpadminbar .ab-item::before,
+#wpadminbar .ab-empty-item::before,
 #wpadminbar .dashicons,
 #wpadminbar .dashicons::before,
 #wpadminbar .dashicons-before,
@@ -76,6 +81,7 @@ html.wp-toolbar {
 }
 
 #wpadminbar .ab-item:hover,
+#wpadminbar .ab-item:hover::before,
 #wpadminbar .ab-item:hover .ab-icon,
 #wpadminbar .ab-item:hover .ab-icon::before,
 #wpadminbar .ab-item:hover .dashicons,
