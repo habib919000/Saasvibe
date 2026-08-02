@@ -87,15 +87,6 @@ html.wp-toolbar {
     padding: 0 12px !important;
 }
 
-#wpadminbar .ab-label,
-#wpadminbar .ab-item span:not(.ab-icon) {
-    line-height: normal !important;
-    height: auto !important;
-    display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
 /* Hover States for Top Bar */
 #wpadminbar .ab-item:hover,
 #wpadminbar .ab-item:focus,
@@ -577,9 +568,14 @@ html.wp-toolbar {
     justify-content: center !important;
 }
 
+/* Core fixes these at height: 32px, sized for its own bar. Inside a taller bar
+   that boxes the label off-centre, so the height comes off and the flex parent
+   does the centring. */
 #wpadminbar .ab-label,
-#wpadminbar .ab-item .display-name {
+#wpadminbar .ab-item .display-name,
+#wpadminbar .ab-item span:not(.ab-icon) {
     line-height: normal !important;
+    height: auto !important;
 }
 
 /* Avatars in the account item sit on the text baseline by default. */
