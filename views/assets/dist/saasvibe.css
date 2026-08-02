@@ -559,6 +559,10 @@
 .border-t-transparent {
   border-top-color: transparent !important;
 }
+.bg-amber-100 {
+  --tw-bg-opacity: 1 !important;
+  background-color: rgb(254 243 199 / var(--tw-bg-opacity, 1)) !important;
+}
 .bg-amber-50 {
   --tw-bg-opacity: 1 !important;
   background-color: rgb(255 251 235 / var(--tw-bg-opacity, 1)) !important;
@@ -843,6 +847,10 @@
   --tw-text-opacity: 1 !important;
   color: rgb(146 64 14 / var(--tw-text-opacity, 1)) !important;
 }
+.text-amber-900 {
+  --tw-text-opacity: 1 !important;
+  color: rgb(120 53 15 / var(--tw-text-opacity, 1)) !important;
+}
 .text-green-600 {
   --tw-text-opacity: 1 !important;
   color: rgb(22 163 74 / var(--tw-text-opacity, 1)) !important;
@@ -914,6 +922,9 @@
 }
 .opacity-50 {
   opacity: 0.5 !important;
+}
+.opacity-60 {
+  opacity: 0.6 !important;
 }
 .opacity-70 {
   opacity: 0.7 !important;
@@ -1096,6 +1107,10 @@
 .focus\:ring-indigo-500:focus {
   --tw-ring-opacity: 1 !important;
   --tw-ring-color: rgb(99 102 241 / var(--tw-ring-opacity, 1)) !important;
+}
+
+.disabled\:cursor-not-allowed:disabled {
+  cursor: not-allowed !important;
 }
 
 .disabled\:opacity-50:disabled {

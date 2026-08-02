@@ -444,15 +444,25 @@ export const ColorCustomizer = ( { settings, onChange, activeTemplate } ) => {
 
 				{ /* Modern Icons Options */ }
 				<div className="space-y-4">
-					<h3 className="text-sm font-semibold text-slate-700 m-0">
+					<h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 m-0">
 						{ __( 'Modern Icons', 'saasvibe' ) }
+						<span className="rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900">
+							{ __( 'Coming soon', 'saasvibe' ) }
+						</span>
 					</h3>
+					<p className="text-xs text-slate-500">
+						{ __(
+							'Lucide icons are not wired into the admin menu yet, so these controls are disabled until the feature ships.',
+							'saasvibe'
+						) }
+					</p>
 
-					<div className="space-y-4">
+					<div className="space-y-4 opacity-60">
 						<div className="flex items-center gap-3">
 							<input
 								type="checkbox"
 								id="modern-icons-enabled"
+								disabled
 								checked={ settings.modernIcons?.enabled || false }
 								onChange={ ( e ) =>
 									onChange( 'modernIcons', {
@@ -460,7 +470,7 @@ export const ColorCustomizer = ( { settings, onChange, activeTemplate } ) => {
 										enabled: e.target.checked,
 									} )
 								}
-								className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+								className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed"
 							/>
 							<label
 								htmlFor="modern-icons-enabled"
@@ -483,16 +493,17 @@ export const ColorCustomizer = ( { settings, onChange, activeTemplate } ) => {
 										<button
 											key={ style.value }
 											type="button"
+											disabled
 											onClick={ () =>
 												onChange( 'modernIcons', {
 													...settings.modernIcons,
 													style: style.value,
 												} )
 											}
-											className={ `text-xs py-2 border rounded-lg transition-all ${
+											className={ `text-xs py-2 border rounded-lg transition-all disabled:cursor-not-allowed ${
 												( settings.modernIcons?.style || 'line' ) === style.value
 													? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-semibold'
-													: 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+													: 'border-slate-200 bg-white text-slate-600'
 											}` }
 										>
 											{ style.label }
