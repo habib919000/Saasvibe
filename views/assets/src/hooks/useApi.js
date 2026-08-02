@@ -18,15 +18,14 @@ export const useApi = () => {
 	const get = ( path, params = {} ) => {
 		const restUrl = window.Saasvibe_Vars?.rest_url || '';
 		const permission = window.Saasvibe_Vars?.permission || '';
-		const isAdmin = window.Saasvibe_Vars?.is_admin || false;
 
-		const queryParams = {
-			...params,
-			is_admin: isAdmin,
-		};
+		// Capability is decided server-side from the authenticated user; sending
+		// a client-supplied "is_admin" alongside it only looked like a trust
+		// boundary, and every endpoint ignored it.
+		const query = buildQueryString( params );
 
 		return fetch(
-			`${ restUrl }${ path }?${ buildQueryString( queryParams ) }`,
+			`${ restUrl }${ path }${ query ? `?${ query }` : '' }`,
 			{
 				headers: {
 					'X-WP-Nonce': permission,
@@ -45,12 +44,6 @@ export const useApi = () => {
 	const post = ( path, body = {} ) => {
 		const restUrl = window.Saasvibe_Vars?.rest_url || '';
 		const permission = window.Saasvibe_Vars?.permission || '';
-		const isAdmin = window.Saasvibe_Vars?.is_admin || false;
-
-		const bodyData = {
-			...body,
-			is_admin: isAdmin,
-		};
 
 		return fetch( `${ restUrl }${ path }`, {
 			method: 'POST',
@@ -58,7 +51,7 @@ export const useApi = () => {
 				'Content-Type': 'application/json',
 				'X-WP-Nonce': permission,
 			},
-			body: JSON.stringify( bodyData ),
+			body: JSON.stringify( body ),
 		} ).then( ( r ) => {
 			if ( ! r.ok ) {
 				return r.json().then( ( err ) => {

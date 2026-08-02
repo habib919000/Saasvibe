@@ -13,12 +13,12 @@
 
 #adminmenuback,
 #adminmenuwrap {
-    background-color: var(--saasvibe-brand-color, #154B75) !important;
+    background-color: var(--saasvibe-brand-fill, #154B75) !important;
 }
 
 #wpcontent,
 #wpfooter {
-    margin-left: var(--saasvibe-sidebar-width, 240px) !important;
+    margin-inline-start: var(--saasvibe-sidebar-width, 240px) !important;
 }
 
 /* Collapsed sidebar compatibility */
@@ -30,15 +30,15 @@
 
 .folded #wpcontent,
 .folded #wpfooter {
-    margin-left: 60px !important;
+    margin-inline-start: 60px !important;
 }
 
 /* Top bar Height Override */
 #wpadminbar {
     height: var(--saasvibe-topbar-height, 46px) !important;
     min-height: var(--saasvibe-topbar-height, 46px) !important;
-    background: var(--saasvibe-brand-color, #154B75) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: var(--saasvibe-brand-fill, #154B75) !important;
+    border-bottom: 1px solid var(--saasvibe-brand-surface, rgba(255, 255, 255, 0.12)) !important;
     box-sizing: border-box;
 }
 
@@ -51,19 +51,29 @@ html.wp-toolbar {
 }
 
 /* 2. Top Bar (#wpadminbar) Styling */
-#wpadminbar *:not(.ab-icon):not(.dashicons):not(.dashicons-before):not(.dashicons-before::before) {
+/* A pseudo-element inside :not() is invalid at every Selectors level, and an
+   invalid argument invalidates the whole selector -- this rule used to carry
+   :not(.dashicons-before::before) and was therefore dropped by every browser,
+   leaving the admin bar on core's light grey. The env badge is excluded so it
+   keeps the text colour derived for its own pill. */
+#wpadminbar *:not(.ab-icon):not(.dashicons):not(.dashicons-before):not(.saasvibe-env-badge) {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
 }
 
+/* Core draws some toolbar glyphs on .ab-icon spans and others straight on the
+   anchor's ::before -- the site-name house, the WP logo, my-account. The second
+   kind is not an .ab-icon, so it kept core's #a7aaad on chrome we repaint. */
 #wpadminbar .ab-icon,
 #wpadminbar .ab-icon::before,
+#wpadminbar .ab-item::before,
+#wpadminbar .ab-empty-item::before,
 #wpadminbar .dashicons,
 #wpadminbar .dashicons::before,
 #wpadminbar .dashicons-before,
 #wpadminbar .dashicons-before::before {
     font-family: 'dashicons' !important;
-    color: rgba(255, 255, 255, 0.8) !important; /* Semi-transparent white for the brand-coloured bar */
+    color: var(--saasvibe-brand-text-strong, rgba(255, 255, 255, 0.8)) !important; /* Semi-transparent white for the brand-coloured bar */
     text-rendering: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -71,6 +81,7 @@ html.wp-toolbar {
 }
 
 #wpadminbar .ab-item:hover,
+#wpadminbar .ab-item:hover::before,
 #wpadminbar .ab-item:hover .ab-icon,
 #wpadminbar .ab-item:hover .ab-icon::before,
 #wpadminbar .ab-item:hover .dashicons,
@@ -80,25 +91,23 @@ html.wp-toolbar {
     color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
 }
 
-#wpadminbar .ab-item,
-#wpadminbar .ab-empty-item {
-    height: var(--saasvibe-topbar-height, 46px) !important;
-    line-height: var(--saasvibe-topbar-height, 46px) !important;
-}
+/* Height and centring for top-level items live in the alignment section, which
+   scopes them so dropdown rows keep their own compact spacing rather than being
+   stretched to the full bar height. */
 
 #wpadminbar #wp-admin-bar-root-default > li:hover > .ab-item,
 #wpadminbar .quicklinks .menupop:hover > .ab-item {
-    background-color: rgba(0, 0, 0, 0.15) !important;
+    background-color: var(--saasvibe-brand-surface-strong, rgba(0, 0, 0, 0.15)) !important;
 }
 
 #wpadminbar .ab-sub-wrapper {
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid var(--saasvibe-brand-surface, rgba(255, 255, 255, 0.1)) !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
-    background: var(--saasvibe-brand-color, #154B75) !important;
+    background: var(--saasvibe-brand-fill, #154B75) !important;
 }
 
 #wpadminbar .ab-submenu .ab-item:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--saasvibe-brand-surface, rgba(255, 255, 255, 0.1)) !important;
 }
 
 /* 3. Sidebar (#adminmenu) Styling
@@ -111,13 +120,13 @@ html.wp-toolbar {
 #adminmenu {
     margin: 0 !important;
     padding-top: 8px !important;
-    background-color: var(--saasvibe-brand-color, #154B75) !important;
+    background-color: var(--saasvibe-brand-fill, #154B75) !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
 #adminmenu li.wp-menu-separator {
     height: 1px !important;
-    background: rgba(255, 255, 255, 0.14) !important;
+    background: var(--saasvibe-brand-line, rgba(255, 255, 255, 0.14)) !important;
     margin: 14px 16px !important;
 }
 
@@ -134,7 +143,7 @@ html.wp-toolbar {
 
 #adminmenu a.menu-top {
     position: relative !important;
-    color: rgba(255, 255, 255, 0.85) !important;
+    color: var(--saasvibe-brand-text-strong, rgba(255, 255, 255, 0.85)) !important;
     font-weight: 500 !important;
     border: none !important;
     border-radius: 6px !important;
@@ -163,7 +172,7 @@ html.wp-toolbar {
 #adminmenu li.menu-top:hover > a.menu-top,
 #adminmenu li.opensub > a.menu-top {
     color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
-    background-color: rgba(255, 255, 255, 0.12) !important;
+    background-color: var(--saasvibe-brand-surface, rgba(255, 255, 255, 0.12)) !important;
 }
 
 /* Active parent: full-contrast label + icon only. No fill, no left border --
@@ -174,7 +183,7 @@ html.wp-toolbar {
 #adminmenu li.wp-has-current-submenu:hover > a.menu-top {
     color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
     background-color: transparent !important;
-    border-left: none !important;
+    border-inline-start: none !important;
     font-weight: 600 !important;
 }
 
@@ -245,7 +254,7 @@ html.wp-toolbar {
 }
 
 #adminmenu .wp-submenu a {
-    color: rgba(255, 255, 255, 0.75) !important;
+    color: var(--saasvibe-brand-text-soft, rgba(255, 255, 255, 0.75)) !important;
     font-weight: 400 !important;
     border: none !important;
     border-radius: 6px !important;
@@ -254,7 +263,9 @@ html.wp-toolbar {
     margin: 2px 8px !important;
     /* 36px = core .wp-menu-image gutter, so submenu text lands under the
        parent's label rather than its icon. */
-    padding: 8px 12px 8px calc(var(--saasvibe-menu-item-padding-left, 12px) + 36px) !important;
+    padding: 8px 12px !important;
+    /* Logical inset so the indent follows the reading direction in RTL. */
+    padding-inline-start: calc(var(--saasvibe-menu-item-padding-left, 12px) + 36px) !important;
     transition: background-color 150ms ease, color 150ms ease !important;
 }
 
@@ -262,7 +273,7 @@ html.wp-toolbar {
 #adminmenu .wp-submenu a:focus,
 #adminmenu .wp-submenu a:active {
     color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
-    background-color: rgba(255, 255, 255, 0.12) !important;
+    background-color: var(--saasvibe-brand-surface, rgba(255, 255, 255, 0.12)) !important;
     /* Core paints an inset bar on the leading edge via box-shadow. */
     box-shadow: none !important;
 }
@@ -283,7 +294,7 @@ html.wp-toolbar {
 #adminmenu .wp-submenu li.current a,
 #adminmenu .wp-submenu li.current a:hover,
 #adminmenu .wp-submenu li.current a:focus {
-    color: var(--saasvibe-brand-color, #154B75) !important;
+    color: var(--saasvibe-brand-accent, #154B75) !important;
     background-color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
     box-shadow: none !important;
     font-weight: 600 !important;
@@ -298,9 +309,9 @@ html.wp-toolbar {
        folded 60px rail would emit 60px-wide flyouts. */
     width: auto !important;
     min-width: 200px !important;
-    background-color: var(--saasvibe-brand-color, #154B75) !important;
+    background-color: var(--saasvibe-brand-fill, #154B75) !important;
     padding: 6px 0 !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid var(--saasvibe-brand-surface-strong, rgba(255, 255, 255, 0.15)) !important;
     border-radius: 8px !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.35) !important;
 }
@@ -312,7 +323,7 @@ html.wp-toolbar {
 
 /* Submenu headers (the repeated parent title WP prepends) stay quiet. */
 #adminmenu .wp-submenu .wp-submenu-head {
-    color: rgba(255, 255, 255, 0.6) !important;
+    color: var(--saasvibe-brand-text-faint, rgba(255, 255, 255, 0.6)) !important;
     padding: 8px 14px !important;
 }
 
@@ -342,7 +353,7 @@ html.wp-toolbar {
 }
 
 #adminmenu div.wp-menu-image::before {
-    color: rgba(255, 255, 255, 0.85) !important;
+    color: var(--saasvibe-brand-text-strong, rgba(255, 255, 255, 0.85)) !important;
     transition: color 150ms ease !important;
 }
 
@@ -359,14 +370,14 @@ html.wp-toolbar {
 
 /* Collapse toggle button restyle */
 #collapse-button {
-    color: rgba(255, 255, 255, 0.85) !important;
+    color: var(--saasvibe-brand-text-strong, rgba(255, 255, 255, 0.85)) !important;
     margin: 8px !important;
     border-radius: 6px !important;
 }
 
 #collapse-button:hover {
     color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
-    background-color: rgba(255, 255, 255, 0.12) !important;
+    background-color: var(--saasvibe-brand-surface, rgba(255, 255, 255, 0.12)) !important;
 }
 
 /* Custom logo styling inside sidebar */
@@ -376,7 +387,7 @@ html.wp-toolbar {
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-bottom: 1px solid var(--saasvibe-brand-surface, rgba(255, 255, 255, 0.12)) !important;
     margin-bottom: 10px !important;
 }
 
@@ -402,14 +413,14 @@ html.wp-toolbar {
 #collapse-button:focus-visible {
     outline: 2px solid var(--saasvibe-brand-text-color, #FFFFFF) !important;
     outline-offset: -2px !important;
-    background-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: var(--saasvibe-brand-surface-strong, rgba(255, 255, 255, 0.15)) !important;
 }
 
 /* The active submenu item keeps its inverted fill when focused; only the ring
    is added, in the brand colour so it reads against the light fill. */
 #adminmenu .wp-submenu li.current a:focus-visible {
     background-color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
-    outline-color: var(--saasvibe-brand-color, #154B75) !important;
+    outline-color: var(--saasvibe-brand-accent, #154B75) !important;
 }
 
 #wpadminbar .ab-item:focus-visible,
@@ -434,7 +445,7 @@ html.wp-toolbar {
     }
     .auto-fold #wpcontent,
     .auto-fold #wpfooter {
-        margin-left: 36px !important;
+        margin-inline-start: 36px !important;
     }
     /* Same rail treatment as .folded, applied only once auto-fold really folds. */
     .auto-fold #adminmenu a.menu-top {
@@ -448,8 +459,8 @@ html.wp-toolbar {
     .auto-fold #adminmenu .wp-submenu {
         width: auto !important;
         min-width: 200px !important;
-        background-color: var(--saasvibe-brand-color, #154B75) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        background-color: var(--saasvibe-brand-fill, #154B75) !important;
+        border: 1px solid var(--saasvibe-brand-surface-strong, rgba(255, 255, 255, 0.15)) !important;
         border-radius: 8px !important;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.35) !important;
     }
@@ -466,7 +477,7 @@ html.wp-toolbar {
     .auto-fold #adminmenuback,
     .auto-fold #adminmenuwrap {
         width: 190px !important;
-        margin-left: -190px !important;
+        margin-inline-start: -190px !important;
     }
     #adminmenu,
     #adminmenu .wp-submenu,
@@ -474,17 +485,17 @@ html.wp-toolbar {
     .auto-fold #adminmenu .wp-submenu {
         width: 190px !important;
         min-width: 0 !important;
-        margin-left: 0 !important;
+        margin-inline-start: 0 !important;
     }
     #wpcontent,
     #wpfooter,
     .auto-fold #wpcontent,
     .auto-fold #wpfooter {
-        margin-left: 0 !important;
+        margin-inline-start: 0 !important;
     }
     .wp-responsive-open #wpcontent,
     .wp-responsive-open #wpfooter {
-        margin-left: 190px !important;
+        margin-inline-start: 190px !important;
     }
     #wpadminbar {
         height: 46px !important;
@@ -493,5 +504,175 @@ html.wp-toolbar {
     }
     body.admin-bar #wpbody {
         padding-top: 46px !important;
+    }
+}
+
+/* ============================================================
+ * 6b. Alignment
+ * ============================================================
+ *
+ * Core lays the toolbar and menu out with floats and fixed boxes sized for its
+ * own 32px bar and default menu density. Both are configurable here, so the
+ * geometry has to follow the setting rather than core's constants:
+ *
+ *   - Toolbar glyphs float to the top of the line box, so on a taller bar they
+ *     ride above their labels. Core also nudges them with `top: 2px`, tuned for
+ *     32px.
+ *   - The menu icon box is a fixed 34px while the label box grows and shrinks
+ *     with the density setting, so icon and label only line up at Normal.
+ *
+ * Flex centring fixes both and stays correct at any height or density. */
+
+/* Only top-level toolbar items take the bar's height -- dropdown rows keep
+   their own compact spacing. */
+#wpadminbar #wp-toolbar > ul > li > .ab-item,
+#wpadminbar #wp-toolbar > ul > li > .ab-empty-item {
+    height: var(--saasvibe-topbar-height, 46px) !important;
+    display: flex !important;
+    align-items: center !important;
+    line-height: normal !important;
+}
+
+#wpadminbar .ab-icon,
+#wpadminbar .ab-item::before,
+#wpadminbar .ab-empty-item::before {
+    float: none !important;
+    position: relative !important;
+    top: auto !important;
+    margin-block: 0 !important;
+    margin-inline: 0 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Core fixes these at height: 32px, sized for its own bar. Inside a taller bar
+   that boxes the label off-centre, so the height comes off and the flex parent
+   does the centring. */
+#wpadminbar .ab-label,
+#wpadminbar .ab-item .display-name,
+#wpadminbar .ab-item span:not(.ab-icon) {
+    line-height: normal !important;
+    height: auto !important;
+}
+
+/* Avatars in the account item sit on the text baseline by default. */
+#wpadminbar #wp-admin-bar-my-account img.avatar {
+    float: none !important;
+    margin: 0 0 0 6px !important;
+    margin-inline: 6px 0 !important;
+    vertical-align: middle !important;
+}
+
+/* Menu icon and label centre on each other at every density. */
+#adminmenu a.menu-top {
+    display: flex !important;
+    align-items: center !important;
+}
+
+#adminmenu div.wp-menu-image {
+    float: none !important;
+    flex: 0 0 36px !important;
+    width: 36px !important;
+    height: auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#adminmenu div.wp-menu-image::before {
+    line-height: 1 !important;
+    padding: 0 !important;
+}
+
+#adminmenu div.wp-menu-image img {
+    max-width: 20px !important;
+    height: auto !important;
+    padding: 0 !important;
+    vertical-align: middle !important;
+}
+
+#adminmenu a.menu-top div.wp-menu-name {
+    flex: 1 1 auto !important;
+}
+
+/* Folded rail: no label to sit beside, so the icon centres in the 60px rail. */
+.folded #adminmenu a.menu-top {
+    justify-content: center !important;
+}
+
+.folded #adminmenu div.wp-menu-image {
+    flex: 0 0 auto !important;
+}
+
+/* ============================================================
+ * 7. Accessibility fallbacks
+ * ============================================================ */
+
+/* Core's "Skip to main content" shortcut is invisible until it takes keyboard
+   focus, and it renders in core's palette on a top bar we have repainted. Pin it
+   to this template's own surface so the first thing a keyboard user reaches is
+   legible. */
+#wpadminbar .screen-reader-shortcut:focus,
+#adminmenuwrap .screen-reader-shortcut:focus,
+.screen-reader-text:focus {
+    background: var(--saasvibe-brand-fill, #154B75) !important;
+    color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
+outline: 2px solid var(--saasvibe-brand-text-color, #FFFFFF) !important; /* The link sits on the
+       brand fill, so the ring takes the colour derived for that fill -- the accent
+       is derived against the inverted active fill and would match this background. */
+    outline-offset: 2px !important;
+    text-decoration: none !important;
+    clip: auto !important;
+    clip-path: none !important;
+    height: auto !important;
+    width: auto !important;
+    padding: 10px 14px !important;
+    border-radius: 6px !important;
+    z-index: 100000 !important;
+}
+
+/* The colour and background transitions on menu items are decorative, so drop
+   them when the visitor has asked for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+    #adminmenu a.menu-top,
+    #adminmenu .wp-submenu a,
+    #adminmenu div.wp-menu-image::before,
+    #adminmenu li.wp-has-submenu > a.menu-top::after,
+    #wpadminbar .ab-item,
+    #wpadminbar .ab-icon,
+    #wpadminbar .ab-icon::before,
+    #wpadminbar .dashicons::before,
+    #collapse-button {
+        transition: none !important;
+    }
+}
+
+/* Windows High Contrast and other forced-colours modes replace the palette
+   wholesale. The brand fill disappears there, so the active row is re-marked
+   with the system highlight and focus rings are redrawn in system colours --
+   otherwise the only cue for "where am I" would be a colour that no longer
+   renders. */
+@media (forced-colors: active) {
+    #adminmenu li.current > a.menu-top,
+    #adminmenu li.wp-has-current-submenu > a.menu-top,
+    #adminmenu .wp-submenu li.current a {
+        background-color: Highlight !important;
+        color: HighlightText !important;
+    }
+
+    #adminmenu div.wp-menu-image::before,
+    #adminmenu li.wp-has-submenu > a.menu-top::after {
+        color: inherit !important;
+    }
+
+    #adminmenu a.menu-top:focus-visible,
+    #adminmenu .wp-submenu a:focus-visible,
+    #wpadminbar a:focus-visible,
+    #wpadminbar .ab-item:focus-visible,
+    #collapse-button:focus-visible {
+        outline: 2px solid CanvasText !important;
+        outline-offset: -2px !important;
     }
 }

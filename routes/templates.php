@@ -12,6 +12,34 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Whether the current user may export or import settings.
+ *
+ * The settings screen also gates these behind a licence tier, but that check
+ * lives in the browser and cannot be trusted on its own -- the REST routes are
+ * reachable directly. This is the authoritative check: `manage_options` by
+ * default, and filterable so a licensing add-on can enforce its own tiers
+ * server-side without touching these routes.
+ *
+ * @param string $operation 'export' or 'import'.
+ * @return bool
+ */
+if ( ! function_exists( 'saasvibe_can_transfer_settings' ) ) {
+    function saasvibe_can_transfer_settings( $operation ) {
+        /**
+         * Filters whether the current user may export/import Saasvibe settings.
+         *
+         * @param bool   $allowed   Defaults to current_user_can( 'manage_options' ).
+         * @param string $operation 'export' or 'import'.
+         */
+        return (bool) apply_filters(
+            'saasvibe_can_transfer_settings',
+            current_user_can( 'manage_options' ),
+            $operation
+        );
+    }
+}
+
 add_action( 'rest_api_init', function() {
     $controller = new \Saasvibe\Controllers\Template_Controller();
 
@@ -21,7 +49,11 @@ add_action( 'rest_api_init', function() {
     register_rest_route( 'saasvibe/v1', '/templates', [
         'methods'             => 'GET',
         'callback'            => [ $controller, 'get_templates' ],
-        'permission_callback' => '__return_true', // Public endpoint
+        'permission_callback' => function() {
+            // Only the settings screen consumes this; no reason to expose the
+            // catalogue to anonymous callers.
+            return current_user_can( 'manage_options' );
+        },
     ] );
 
     // ============================================
@@ -72,7 +104,7 @@ add_action( 'rest_api_init', function() {
         'methods'             => 'GET',
         'callback'            => [ $controller, 'export_settings' ],
         'permission_callback' => function( $request ) {
-            if ( ! current_user_can( 'manage_options' ) ) {
+            if ( ! saasvibe_can_transfer_settings( 'export' ) ) {
                 return new WP_Error(
                     'rest_forbidden',
                     __( 'You do not have permission to export settings.', 'saasvibe' ),
@@ -91,9 +123,12 @@ add_action( 'rest_api_init', function() {
         'callback'            => [ $controller, 'import_settings' ],
         'args'                => [
             'content' => [
-                'type'              => 'string',
-                'required'          => true,
-                'sanitize_callback' => 'sanitize_text_field',
+                'type'     => 'string',
+                'required' => true,
+                // No sanitize_callback: this is a raw JSON document, and
+                // sanitize_text_field() would strip the newlines and encode the
+                // characters it needs. import_settings() json_decode()s it and
+                // runs the decoded array through the settings schema validator.
                 'validate_callback' => function( $value ) {
                     if ( empty( $value ) ) {
                         return new WP_Error(
@@ -117,7 +152,7 @@ add_action( 'rest_api_init', function() {
             }
             
             // Verify user capability
-            if ( ! current_user_can( 'manage_options' ) ) {
+            if ( ! saasvibe_can_transfer_settings( 'import' ) ) {
                 return new WP_Error(
                     'rest_forbidden',
                     __( 'You do not have permission to import settings.', 'saasvibe' ),

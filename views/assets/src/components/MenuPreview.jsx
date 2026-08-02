@@ -8,36 +8,30 @@ import {
 	ExternalLink,
 } from 'lucide-react';
 
+import {
+	accessibleOn,
+	brandHoverTint,
+	contrastTargetFor,
+	contrastTint,
+	idealTextColor,
+	legibleFill,
+	safeHex,
+} from '../utils/color';
+
 export const MenuPreview = ( { settings, activeTemplate } ) => {
 	if ( ! activeTemplate ) {
 		return null;
 	}
 
-	const brandColor = settings.brandColor || window.Saasvibe_Vars?.wp_brand_color || '#5E6AD2';
+	const brandColor = safeHex(
+		settings.brandColor || window.Saasvibe_Vars?.wp_brand_color
+	);
 	const sidebarWidth = settings.sidebarWidth || 240;
 	const topBarHeight = settings.topBarHeight || 46;
 	const customLogo = settings.customLogo || '';
 	const density = settings.density || 'normal';
 
-	// CSS RGB parser for brand opacity
-	const getRgbFromHex = ( hex ) => {
-		const cleanHex = hex.replace( '#', '' );
-		if ( cleanHex.length === 3 ) {
-			return {
-				r: parseInt( cleanHex[ 0 ] + cleanHex[ 0 ], 16 ),
-				g: parseInt( cleanHex[ 1 ] + cleanHex[ 1 ], 16 ),
-				b: parseInt( cleanHex[ 2 ] + cleanHex[ 2 ], 16 ),
-			};
-		}
-		return {
-			r: parseInt( cleanHex.substring( 0, 2 ), 16 ),
-			g: parseInt( cleanHex.substring( 2, 4 ), 16 ),
-			b: parseInt( cleanHex.substring( 4, 6 ), 16 ),
-		};
-	};
-
-	const rgb = getRgbFromHex( brandColor );
-	const brandHover = `rgba(${ rgb.r }, ${ rgb.g }, ${ rgb.b }, 0.10)`;
+	const brandHover = brandHoverTint( brandColor );
 
 	// Calculate spacing based on density
 	let itemPadding = 'py-2 px-3.5';
@@ -47,19 +41,39 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 		itemPadding = 'py-3.5 px-4';
 	}
 
+	// Surfaces that carry text are painted with the legible fill: a mid-tone
+	// around #767676 reaches only ~4.48:1 against both black and white, so the
+	// fill is nudged clear of that band. Everything else passes through as picked.
+	const target = contrastTargetFor( settings.contrastLevel );
+	const brandFill = legibleFill( brandColor, target );
+
+	// Automatic font contrast: black on light brand colors, white on dark ones,
+	// decided by WCAG relative luminance (see utils/color.js).
+	const brandTextColor = idealTextColor( brandFill );
+
+	// Classic Elevated paints the whole chrome -- sidebar and top bar -- with the
+	// brand color, so its idle labels ride on the brand color too and have to use
+	// the derived contrast color rather than the template's static text color.
+	const brandPaintsChrome = activeTemplate.id === 'classic-elevated';
+
 	// Determine default mockup color values based on selected template
 	const previewStyles = {
-		sidebarBg:
-			activeTemplate.id === 'classic-elevated'
-				? brandColor
-				: activeTemplate.defaultColors.background,
-		sidebarText: activeTemplate.defaultColors.text,
-		topBarBg:
-			activeTemplate.id === 'classic-elevated'
-				? brandColor
-				: activeTemplate.style === 'both'
-				? activeTemplate.defaultColors.background
-				: '#FFFFFF',
+		sidebarBg: brandPaintsChrome
+			? brandFill
+			: activeTemplate.defaultColors.background,
+		// Idle labels on brand-painted chrome take a verified tint rather than a
+		// blanket opacity, which could dip under AA on a mid-tone brand color.
+		sidebarText: brandPaintsChrome
+			? contrastTint( brandFill, 0.85, target )
+			: activeTemplate.defaultColors.text,
+		topBarBg: brandPaintsChrome
+			? brandFill
+			: activeTemplate.style === 'both'
+			? activeTemplate.defaultColors.background
+			: '#FFFFFF',
+		topBarText: brandPaintsChrome
+			? contrastTint( brandFill, 0.85, target )
+			: 'inherit',
 		topBarBorder:
 			activeTemplate.id === 'vercel-minimal'
 				? '1px solid #E5E7EB'
@@ -68,23 +82,19 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 				: 'none',
 	};
 
-	// Calculate contrast text color for brand color
-	const getIdealTextColor = ( r, g, b ) => {
-		const luminance = ( 0.2126 * r + 0.7152 * g + 0.0722 * b ) / 255;
-		return luminance > 0.5 ? '#000000' : '#FFFFFF';
-	};
-	const brandTextColor = getIdealTextColor( rgb.r, rgb.g, rgb.b );
-
 	// Every template marks the active row with a solid fill. Classic Elevated
 	// inverts it -- its sidebar is already painted with the brand color, so the
-	// fill has to be the contrast color with a brand-colored label.
-	const invertsActiveFill = activeTemplate.id === 'classic-elevated';
-	const activeFillBg = invertsActiveFill ? brandTextColor : brandColor;
-	const activeFillText = invertsActiveFill ? brandColor : brandTextColor;
+	// fill has to be the contrast color with a brand-colored label, lightened or
+	// darkened as needed to stay above AA on that fill.
+	const invertsActiveFill = brandPaintsChrome;
+	const activeFillBg = invertsActiveFill ? brandTextColor : brandFill;
+	const activeFillText = invertsActiveFill
+		? accessibleOn( brandColor, brandTextColor, target )
+		: brandTextColor;
 
 	// Signature corner radius per template.
 	const activeFillRadius =
-		activeTemplate.id === 'wedevs-dark'
+		activeTemplate.id === 'dev-dark'
 			? '9999px'
 			: activeTemplate.id === 'vercel-minimal'
 			? '4px'
@@ -196,7 +206,7 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 											margin: '0 8px',
 										} }
 										className={ `flex items-center gap-2.5 text-xs font-medium cursor-pointer transition-all ${ itemPadding } ${
-											isSelected
+											isSelected || brandPaintsChrome
 												? ''
 												: 'opacity-70 hover:opacity-100 hover:bg-slate-200/20'
 										}` }
@@ -226,6 +236,7 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 							style={ {
 								height: `${ topBarHeight }px`,
 								backgroundColor: previewStyles.topBarBg,
+								color: previewStyles.topBarText,
 								borderBottom: previewStyles.topBarBorder,
 							} }
 							className="flex items-center justify-between px-4 select-none shrink-0"
@@ -240,13 +251,17 @@ export const MenuPreview = ( { settings, activeTemplate } ) => {
 								{ settings.environmentBadge?.enabled && (
 									<span
 										style={ {
-											backgroundColor:
+											backgroundColor: legibleFill(
 												settings.environmentBadge
 													.color || brandColor,
-											color: getIdealTextColor(
-												getRgbFromHex( settings.environmentBadge.color || brandColor ).r,
-												getRgbFromHex( settings.environmentBadge.color || brandColor ).g,
-												getRgbFromHex( settings.environmentBadge.color || brandColor ).b
+												target
+											),
+											color: idealTextColor(
+												legibleFill(
+													settings.environmentBadge
+														.color || brandColor,
+													target
+												)
 											),
 										} }
 										className="text-[9px] font-semibold px-2 py-0.5 rounded-full block tracking-wide truncate"

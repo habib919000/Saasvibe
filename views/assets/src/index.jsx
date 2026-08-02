@@ -6,9 +6,7 @@ import {
 	Palette,
 	Layers,
 	Sliders,
-	Shield,
 	FileJson,
-	FolderLock,
 	Check,
 	ChevronRight,
 	Sparkles,
@@ -17,6 +15,13 @@ import {
 } from 'lucide-react';
 
 import useApi from '@hooks/useApi';
+import {
+	brandHoverTint,
+	contrastTargetFor,
+	idealTextColor,
+	legibleFill,
+	safeHex,
+} from './utils/color';
 import TemplateSelector from './components/TemplateSelector';
 import ColorCustomizer from './components/ColorCustomizer';
 import MenuPreview from './components/MenuPreview';
@@ -51,6 +56,7 @@ const App = () => {
 	const [ settings, setSettings ] = useState( {
 		templateId: 'linear-dark',
 		brandColor: '',
+		contrastLevel: 'aa',
 		density: 'normal',
 		customLogo: '',
 		topBarHeight: 46,
@@ -80,52 +86,39 @@ const App = () => {
 	);
 	const [ wizardStep, setWizardStep ] = useState( 1 );
 
-	// License variables
-	const [ licenseKey, setLicenseKey ] = useState(
-		window.Saasvibe_Vars?.license?.key || ''
-	);
-	const [ isActivatingLicense, setIsActivatingLicense ] = useState( false );
-	const [ isPro, setIsPro ] = useState(
-		window.Saasvibe_Vars?.is_pro || false
-	);
-
 	useEffect( () => {
-		const brandColor = settings.brandColor || window.Saasvibe_Vars?.wp_brand_color || '#5E6AD2';
+		const brandColor = safeHex(
+			settings.brandColor || window.Saasvibe_Vars?.wp_brand_color
+		);
 		const root = document.getElementById( 'saasvibe-app' );
 		if ( root ) {
-			const hexToRgb = ( hex ) => {
-				hex = hex.replace( '#', '' );
-				if ( hex.length === 3 ) {
-					hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-				}
-				const num = parseInt( hex, 16 );
-				return {
-					r: ( num >> 16 ) & 255,
-					g: ( num >> 8 ) & 255,
-					b: num & 255,
-				};
-			};
-
-			const getContrastColor = ( rgb ) => {
-				const luminance = ( 0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b ) / 255;
-				return luminance > 0.5 ? '#000000' : '#FFFFFF';
-			};
-
 			try {
-				const rgb = hexToRgb( brandColor );
-				const hoverColor = `rgba(${ rgb.r }, ${ rgb.g }, ${ rgb.b }, 0.10)`;
-				const textColor = getContrastColor( rgb );
+				// Surfaces that carry text use the legible fill, so a mid-tone
+				// brand color cannot leave the settings UI's own buttons and
+				// badges under AA either.
+				const fill = legibleFill(
+					brandColor,
+					contrastTargetFor( settings.contrastLevel )
+				);
 
 				root.style.setProperty( '--saasvibe-brand-color', brandColor );
-				root.style.setProperty( '--saasvibe-brand-hover-color', hoverColor );
-				root.style.setProperty( '--saasvibe-brand-text-color', textColor );
+				root.style.setProperty( '--saasvibe-brand-fill', fill );
+				root.style.setProperty(
+					'--saasvibe-brand-hover-color',
+					brandHoverTint( brandColor )
+				);
+				root.style.setProperty(
+					'--saasvibe-brand-text-color',
+					idealTextColor( fill )
+				);
 			} catch ( e ) {
 				root.style.setProperty( '--saasvibe-brand-color', '#5E6AD2' );
+				root.style.setProperty( '--saasvibe-brand-fill', '#5E6AD2' );
 				root.style.setProperty( '--saasvibe-brand-hover-color', 'rgba(94, 106, 210, 0.10)' );
 				root.style.setProperty( '--saasvibe-brand-text-color', '#FFFFFF' );
 			}
 		}
-	}, [ settings.brandColor ] );
+	}, [ settings.brandColor, settings.contrastLevel ] );
 
 	// Get active template info
 	const templates = window.Saasvibe_Vars?.templates || [];
@@ -176,46 +169,6 @@ const App = () => {
 		} finally {
 			setIsSaving( false );
 		}
-	};
-
-	const handleLicenseActivate = async ( e ) => {
-		e.preventDefault();
-		if ( ! licenseKey ) {
-			return;
-		}
-
-		setIsActivatingLicense( true );
-		// Simulate remote activation API check
-		setTimeout( () => {
-			setIsActivatingLicense( false );
-			if (
-				licenseKey.startsWith( 'PRO-' ) ||
-				licenseKey.startsWith( 'AGENCY-' )
-			) {
-				setIsPro( true );
-				if ( window.Saasvibe_Vars ) {
-					window.Saasvibe_Vars.is_pro = true;
-					if ( ! window.Saasvibe_Vars.settings ) {
-						window.Saasvibe_Vars.settings = {};
-					}
-					window.Saasvibe_Vars.settings.license_tier =
-						licenseKey.startsWith( 'AGENCY-' ) ? 'agency' : 'pro';
-				}
-				toast.success(
-					__(
-						'License activated successfully! Pro templates unlocked.',
-						'saasvibe'
-					)
-				);
-			} else {
-				toast.error(
-					__(
-						'Invalid license key format. Use keys starting with PRO- or AGENCY-.',
-						'saasvibe'
-					)
-				);
-			}
-		}, 1200 );
 	};
 
 	const handleWizardComplete = async () => {
@@ -611,11 +564,6 @@ const App = () => {
 								label: __( 'Advanced', 'saasvibe' ),
 								icon: <Sliders className="h-4 w-4" />,
 							},
-							{
-								id: 'license',
-								label: __( 'License', 'saasvibe' ),
-								icon: <Shield className="h-4 w-4" />,
-							},
 						].map( ( tab ) => (
 							<button
 								key={ tab.id }
@@ -663,6 +611,18 @@ const App = () => {
 									<p className="text-sm text-slate-500 mt-1">
 										{ __(
 											'Select which WordPress user roles should hide specific navigation menu items.',
+											'saasvibe'
+										) }
+									</p>
+									<p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+										<strong className="font-semibold">
+											{ __(
+												'Visibility only, not access control. ',
+												'saasvibe'
+											) }
+										</strong>
+										{ __(
+											'Hiding a menu removes it from the sidebar for that role. It does not revoke any capability — a user who knows the URL can still open the screen. Use a roles and capabilities plugin when you need to actually restrict access. Settings stays visible to anyone who can manage options, so this screen cannot lock itself away.',
 											'saasvibe'
 										) }
 									</p>
@@ -926,113 +886,6 @@ const App = () => {
 							</div>
 						) }
 
-						{ activeTab === 'license' && (
-							<div className="p-6 space-y-6">
-								<div>
-									<h2 className="text-xl font-semibold text-slate-800 m-0">
-										{ __(
-											'Plugin License Manager',
-											'saasvibe'
-										) }
-									</h2>
-									<p className="text-sm text-slate-500 mt-1">
-										{ __(
-											'Register license keys to unlock advanced design templates and configuration transfer utilities.',
-											'saasvibe'
-										) }
-									</p>
-								</div>
-
-								<div className="border border-slate-200 rounded-xl p-6 bg-white space-y-4 max-w-xl">
-									<div className="flex items-center justify-between border-b border-slate-100 pb-4">
-										<span className="text-xs text-slate-500 font-medium">
-											{ __(
-												'Current Tier:',
-												'saasvibe'
-											) }
-										</span>
-										<span
-											className={ `text-xs px-2.5 py-1 rounded-full font-bold uppercase ${
-												isPro
-													? 'bg-indigo-100 text-indigo-700'
-													: 'bg-slate-100 text-slate-600'
-											}` }
-										>
-											{ isPro
-												? __(
-														'Pro / Agency Active',
-														'saasvibe'
-												  )
-												: __(
-														'Free Tier',
-														'saasvibe'
-												  ) }
-										</span>
-									</div>
-
-									<form
-										onSubmit={ handleLicenseActivate }
-										className="space-y-4"
-									>
-										<div className="space-y-1">
-											<label className="text-xs font-medium text-slate-500 block">
-												{ __(
-													'License Activation Key',
-													'saasvibe'
-												) }
-											</label>
-											<div className="flex items-center gap-3">
-												<input
-													type="password"
-													value={ licenseKey }
-													placeholder="PRO-XXXX-XXXX"
-													onChange={ ( e ) =>
-														setLicenseKey(
-															e.target.value
-														)
-													}
-													className="border border-slate-200 rounded px-3 py-2 text-sm w-72 focus:outline-none focus:border-indigo-500"
-												/>
-												<button
-													type="submit"
-													disabled={
-														isActivatingLicense ||
-														! licenseKey
-													}
-													className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50"
-												>
-													{ isActivatingLicense ? (
-														<Loader2 className="h-4 w-4 animate-spin" />
-													) : null }
-													{ __(
-														'Activate',
-														'saasvibe'
-													) }
-												</button>
-											</div>
-										</div>
-									</form>
-
-									{ ! isPro && (
-										<div className="p-4 bg-slate-50 rounded-xl flex items-start gap-2.5 text-slate-600 text-xs mt-4">
-											<FolderLock className="h-5 w-5 text-indigo-600 shrink-0" />
-											<div>
-												<span className="font-semibold text-slate-800 block mb-0.5">
-													{ __(
-														'Demo Key Notice',
-														'saasvibe'
-													) }
-												</span>
-												{ __(
-													'Enter a demo license key starting with "PRO-" (e.g. PRO-DEMO) or "AGENCY-" (e.g. AGENCY-DEMO) to test the Pro templates and Agency migration tools.',
-													'saasvibe'
-												) }
-											</div>
-										</div>
-									) }
-								</div>
-							</div>
-						) }
 					</div>
 				</div>
 

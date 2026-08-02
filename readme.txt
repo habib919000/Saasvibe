@@ -4,7 +4,7 @@ Tags: admin, dashboard, customization, templates, branding
 Requires at least: 5.8
 Requires PHP: 7.4
 Tested up to: 7.0
-Stable tag: 2.1.0
+Stable tag: 2.2.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -167,6 +167,28 @@ Yes. Visit our documentation at https://github.com/habib919000/Saasvibe for guid
 6. **Settings Management** — Complete customization interface with real-time preview
 
 == Changelog ==
+
+= 2.2.0 =
+**Automatic contrast across every template:**
+* Text on any brand-filled surface is derived from the brand colour's WCAG 2.1 relative luminance — dark text on light colours, light text on dark ones — in all four templates and the live preview.
+* The brand colour used as a label or icon is lightened or darkened by the smallest amount that clears the contrast target against the chrome behind it, on the resting background and the hover fill alike.
+* Mid-tone brand colours (around #767676), where neither black nor white can clear AA, now nudge the fill itself clear of that band instead of shipping unreadable text.
+* New contrast target setting: AA (4.5:1, default) or AAA (7:1).
+
+**Changed:**
+* The weDevs Dark template is now called Dev Dark. Sites already using it are migrated automatically.
+
+**Removed:**
+* The License tab, which activated nothing and gated export/import behind a tier flag the plugin never set. Export and import are now available to any user who can manage options.
+
+**Fixed:**
+* Import never worked — the settings modal posted the parsed object instead of the raw document, so every import failed with "No settings provided".
+* A non-JSON request body raised an uncaught fatal in the save and import endpoints instead of returning a 400.
+* The custom sidebar logo was never injected, because its script ran before the admin menu existed.
+* Hiding the Settings menu via Role Visibility could strand an administrator with no route back to this plugin's screen.
+* The /templates REST route no longer answers unauthenticated callers.
+* Export and import are now authorised server-side (filterable via `saasvibe_can_transfer_settings`), not only in the browser.
+* The plugin version constant had drifted behind the plugin header, so admin assets were cache-busted with a stale version.
 
 = 2.1.0 =
 **Redesigned navigation templates:**

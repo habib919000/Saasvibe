@@ -4,13 +4,6 @@ import { Download, Upload, ShieldAlert, X, CheckCircle } from 'lucide-react';
 import useApi from '@hooks/useApi';
 
 export const ExportModal = ( { isOpen, onClose, onImportSuccess } ) => {
-	const isPro = window.Saasvibe_Vars?.is_pro || false;
-	// For local evaluation, check if agency tier is active
-	const licenseTier =
-		window.Saasvibe_Vars?.settings?.license_tier ||
-		( isPro ? 'agency' : 'free' );
-	const isAgency = licenseTier === 'agency';
-
 	const [ isImporting, setIsImporting ] = useState( false );
 	const [ importStatus, setImportStatus ] = useState( null ); // 'success' | 'error'
 	const [ errorMessage, setErrorMessage ] = useState( '' );
@@ -22,33 +15,14 @@ export const ExportModal = ( { isOpen, onClose, onImportSuccess } ) => {
 	}
 
 	const handleExport = () => {
-		if ( ! isAgency ) {
-			alert(
-				__(
-					'Exporting settings is an Agency feature. Please upgrade your plan.',
-					'saasvibe'
-				)
-			);
-			return;
-		}
-
 		const restUrl = window.Saasvibe_Vars?.rest_url || '';
 		const permission = window.Saasvibe_Vars?.permission || '';
 
 		// Trigger a direct browser file download by redirecting to our REST export route
-		window.location.href = `${ restUrl }settings/export?is_admin=true&_wpnonce=${ permission }`;
+		window.location.href = `${ restUrl }settings/export?_wpnonce=${ permission }`;
 	};
 
 	const handleImportClick = () => {
-		if ( ! isAgency ) {
-			alert(
-				__(
-					'Importing settings is an Agency feature. Please upgrade your plan.',
-					'saasvibe'
-				)
-			);
-			return;
-		}
 		fileInputRef.current?.click();
 	};
 
@@ -64,14 +38,30 @@ export const ExportModal = ( { isOpen, onClose, onImportSuccess } ) => {
 
 		const reader = new FileReader();
 		reader.onload = async ( event ) => {
-			try {
-				const jsonContent = JSON.parse( event.target?.result );
+			const raw = String( event.target?.result || '' );
 
-				// Call standard REST API importer
-				const response = await api.post(
-					'settings/import',
-					jsonContent
+			// Parse first, in its own guard: a malformed file is the user's to
+			// fix, while a rejected request is the server's to explain. Sharing
+			// one catch reported every 400, 403 and dropped connection as
+			// "Invalid JSON file content."
+			try {
+				JSON.parse( raw );
+			} catch ( err ) {
+				setImportStatus( 'error' );
+				setErrorMessage(
+					__( 'Invalid JSON file content.', 'saasvibe' )
 				);
+				setIsImporting( false );
+				return;
+			}
+
+			try {
+				// The importer takes the raw document under `content`; posting
+				// the parsed object instead left content empty and every import
+				// failed with "No settings provided".
+				const response = await api.post( 'settings/import', {
+					content: raw,
+				} );
 
 				if ( response.success ) {
 					setImportStatus( 'success' );
@@ -88,7 +78,11 @@ export const ExportModal = ( { isOpen, onClose, onImportSuccess } ) => {
 			} catch ( err ) {
 				setImportStatus( 'error' );
 				setErrorMessage(
-					__( 'Invalid JSON file content.', 'saasvibe' )
+					err?.message ||
+						__(
+							'Import failed. The server rejected the request.',
+							'saasvibe'
+						)
 				);
 			} finally {
 				setIsImporting( false );
@@ -116,43 +110,15 @@ export const ExportModal = ( { isOpen, onClose, onImportSuccess } ) => {
 
 				{ /* Content */ }
 				<div className="p-6 space-y-6">
-					{ ! isAgency && (
-						<div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-start gap-2.5 text-indigo-950 text-xs">
-							<ShieldAlert className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
-							<div>
-								<span className="font-semibold block text-indigo-900 mb-0.5">
-									{ __(
-										'Agency Feature Upgrade Required',
-										'saasvibe'
-									) }
-								</span>
-								{ __(
-									'Exporting configurations into a JSON file or importing settings on client deployments is limited to the Agency Plan ($89/yr). Upgrade to unlock.',
-									'saasvibe'
-								) }
-							</div>
-						</div>
-					) }
 
 					<div className="grid grid-cols-2 gap-4">
 						{ /* Export Button Card */ }
 						<button
 							type="button"
 							onClick={ handleExport }
-							disabled={ ! isAgency }
-							className={ `flex flex-col items-center justify-center p-6 border rounded-xl gap-2 transition-all ${
-								isAgency
-									? 'border-slate-200 hover:border-indigo-600 hover:bg-indigo-50/20 text-slate-700 hover:text-indigo-700 cursor-pointer'
-									: 'border-slate-100 bg-slate-50/50 text-slate-400 cursor-not-allowed'
-							}` }
+							className="flex flex-col items-center justify-center p-6 border border-slate-200 rounded-xl gap-2 transition-all hover:border-indigo-600 hover:bg-indigo-50/20 text-slate-700 hover:text-indigo-700 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
 						>
-							<Download
-								className={ `h-6 w-6 ${
-									isAgency
-										? 'text-indigo-600'
-										: 'text-slate-300'
-								}` }
-							/>
+							<Download className="h-6 w-6 text-indigo-600" />
 							<span className="text-xs font-semibold">
 								{ __( 'Export JSON', 'saasvibe' ) }
 							</span>
@@ -168,20 +134,10 @@ export const ExportModal = ( { isOpen, onClose, onImportSuccess } ) => {
 						<button
 							type="button"
 							onClick={ handleImportClick }
-							disabled={ ! isAgency || isImporting }
-							className={ `flex flex-col items-center justify-center p-6 border rounded-xl gap-2 transition-all ${
-								isAgency
-									? 'border-slate-200 hover:border-indigo-600 hover:bg-indigo-50/20 text-slate-700 hover:text-indigo-700 cursor-pointer'
-									: 'border-slate-100 bg-slate-50/50 text-slate-400 cursor-not-allowed'
-							}` }
+							disabled={ isImporting }
+							className="flex flex-col items-center justify-center p-6 border border-slate-200 rounded-xl gap-2 transition-all hover:border-indigo-600 hover:bg-indigo-50/20 text-slate-700 hover:text-indigo-700 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
 						>
-							<Upload
-								className={ `h-6 w-6 ${
-									isAgency
-										? 'text-indigo-600'
-										: 'text-slate-300'
-								}` }
-							/>
+							<Upload className="h-6 w-6 text-indigo-600" />
 							<span className="text-xs font-semibold">
 								{ __( 'Import JSON', 'saasvibe' ) }
 							</span>

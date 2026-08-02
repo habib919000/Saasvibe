@@ -31,6 +31,10 @@ class Template_Controller {
                     'accent'     => '#2563EB',
                     'hover'      => '#1A1A1A',
                 ],
+                // Static chrome greys, held to the site's contrast target at
+                // render time. Empty means the template derives that role from
+                // the brand color instead.
+                'mutedColors'   => [ 'icon' => '#94949E', 'head' => '#818189', 'control' => '#A1A1AA' ],
             ],
             [
                 'id'            => 'vercel-minimal',
@@ -44,6 +48,10 @@ class Template_Controller {
                     'accent'     => '#000000',
                     'hover'      => '#F3F4F6',
                 ],
+                // Static chrome greys, held to the site's contrast target at
+                // render time. Empty means the template derives that role from
+                // the brand color instead.
+                'mutedColors'   => [ 'icon' => '#4B5563', 'head' => '#687081', 'control' => '#666666' ],
             ],
             [
                 'id'            => 'classic-elevated',
@@ -57,19 +65,27 @@ class Template_Controller {
                     'accent'     => '#2271B1',
                     'hover'      => '#1B5B8E',
                 ],
+                // Static chrome greys, held to the site's contrast target at
+                // render time. Empty means the template derives that role from
+                // the brand color instead.
+                'mutedColors'   => [ 'icon' => '', 'head' => '', 'control' => '' ],
             ],
             [
-                'id'            => 'wedevs-dark',
-                'name'          => __( 'weDevs Dark', 'saasvibe' ),
+                'id'            => 'dev-dark',
+                'name'          => __( 'Dev Dark', 'saasvibe' ),
                 'style'         => 'sidebar',
                 'tier'          => 'free',
-                'designRef'     => 'weDevs',
+                'designRef'     => 'Dark UI',
                 'defaultColors' => [
                     'background' => '#000000',
                     'text'       => '#FFFFFF',
                     'accent'     => '#FF5858',
                     'hover'      => '#1A1A1A',
                 ],
+                // Static chrome greys, held to the site's contrast target at
+                // render time. Empty means the template derives that role from
+                // the brand color instead.
+                'mutedColors'   => [ 'icon' => '', 'head' => '#818189', 'control' => '#A1A1AA' ],
             ],
         ];
     }
@@ -115,7 +131,17 @@ class Template_Controller {
      */
     public function save_settings( \WP_REST_Request $request ) {
         try {
+            // A non-JSON body makes get_json_params() return null, which would
+            // hit the array type hint below as an uncatchable TypeError.
             $params = $request->get_json_params();
+
+            if ( ! is_array( $params ) ) {
+                return new \WP_Error(
+                    'invalid_body',
+                    __( 'Request body must be a JSON object', 'saasvibe' ),
+                    [ 'status' => 400 ]
+                );
+            }
             
             // Validate incoming data
             $validated = $this->validate_and_sanitize_settings( $params );
@@ -190,6 +216,15 @@ class Template_Controller {
     public function import_settings( \WP_REST_Request $request ) {
         try {
             $params = $request->get_json_params();
+
+            if ( ! is_array( $params ) ) {
+                return new \WP_Error(
+                    'invalid_body',
+                    __( 'Request body must be a JSON object', 'saasvibe' ),
+                    [ 'status' => 400 ]
+                );
+            }
+
             $file_content = $params['content'] ?? '';
             
             if ( empty( $file_content ) ) {
@@ -211,7 +246,7 @@ class Template_Controller {
             
             // Parse JSON
             $data = json_decode( $file_content, true );
-            
+
             if ( json_last_error() !== JSON_ERROR_NONE ) {
                 return new \WP_Error(
                     'invalid_json',
@@ -258,7 +293,7 @@ class Template_Controller {
         $validated = [];
         
         // Validate template ID
-        $template_id = $settings['templateId'] ?? 'linear-dark';
+        $template_id = self::resolve_template_id( $settings['templateId'] ?? 'linear-dark' );
         if ( ! $this->is_valid_template( $template_id ) ) {
             return new \WP_Error(
                 'invalid_template',
@@ -299,6 +334,19 @@ class Template_Controller {
             $validated['customLogo'] = '';
         }
         
+        // Validate contrast level. 'aa' targets 4.5:1 (WCAG 2.1 AA), 'aaa' targets
+        // 7:1 (AAA) -- the latter shifts brand-derived colors further from the
+        // picked hue, which is a deliberate trade the site owner opts into.
+        $contrast_level = $settings['contrastLevel'] ?? 'aa';
+        if ( ! in_array( $contrast_level, [ 'aa', 'aaa' ], true ) ) {
+            return new \WP_Error(
+                'invalid_contrast_level',
+                __( 'Contrast level must be "aa" or "aaa"', 'saasvibe' ),
+                [ 'status' => 400 ]
+            );
+        }
+        $validated['contrastLevel'] = $contrast_level;
+
         // Validate density
         $density = $settings['density'] ?? 'normal';
         if ( ! in_array( $density, [ 'normal', 'compact', 'relaxed' ], true ) ) {
@@ -405,6 +453,24 @@ class Template_Controller {
     }
 
     /**
+     * Map a stored template id onto its current one.
+     *
+     * Renaming a template would otherwise strand every site already using it:
+     * the id fails validation on the next save, and the chrome hook looks for a
+     * stylesheet that no longer exists, so the admin silently loses its styling.
+     *
+     * @param string $template_id Stored id.
+     * @return string Current id.
+     */
+    public static function resolve_template_id( string $template_id ): string {
+        $renamed = [
+            'wedevs-dark' => 'dev-dark',
+        ];
+
+        return $renamed[ $template_id ] ?? $template_id;
+    }
+
+    /**
      * Check if template ID exists and user has access
      *
      * @param string $template_id
@@ -429,6 +495,7 @@ class Template_Controller {
         return [
             'templateId'      => 'linear-dark',
             'brandColor'      => '#5E6AD2',
+            'contrastLevel'   => 'aa',
             'customLogo'      => '',
             'density'         => 'normal',
             'topBarHeight'    => 46,
