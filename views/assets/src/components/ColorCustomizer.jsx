@@ -178,11 +178,10 @@ export const ColorCustomizer = ( { settings, onChange, activeTemplate } ) => {
 						<span className="block text-xs font-semibold text-slate-700">
 							{ __( 'Contrast target', 'saasvibe' ) }
 						</span>
-						<div
-							role="radiogroup"
-							aria-label={ __( 'Contrast target', 'saasvibe' ) }
-							className="mt-1.5 inline-flex rounded-lg border border-slate-200 p-0.5"
-						>
+						<fieldset className="mt-1.5 inline-flex rounded-lg border border-slate-200 p-0.5">
+							<legend className="sr-only">
+								{ __( 'Contrast target', 'saasvibe' ) }
+							</legend>
 							{ [
 								{
 									value: 'aa',
@@ -197,29 +196,36 @@ export const ColorCustomizer = ( { settings, onChange, activeTemplate } ) => {
 									( settings.contrastLevel || 'aa' ) ===
 									option.value;
 
+								// Native radios so the group is one tab stop with
+								// arrow-key selection, rather than two buttons
+								// wearing role="radio" without the behaviour.
 								return (
-									<button
+									<label
 										key={ option.value }
-										type="button"
-										role="radio"
-										aria-checked={ isActive }
-										onClick={ () =>
-											onChange(
-												'contrastLevel',
-												option.value
-											)
-										}
-										className={ `rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+										className={ `cursor-pointer rounded-md px-3 py-1 text-xs font-medium transition-colors focus-within:ring-2 focus-within:ring-indigo-500 ${
 											isActive
 												? 'bg-indigo-600 text-white'
 												: 'text-slate-600 hover:bg-slate-100'
 										}` }
 									>
+										<input
+											type="radio"
+											name="saasvibe-contrast-level"
+											value={ option.value }
+											checked={ isActive }
+											onChange={ () =>
+												onChange(
+													'contrastLevel',
+													option.value
+												)
+											}
+											className="sr-only"
+										/>
 										{ option.label }
-									</button>
+									</label>
 								);
 							} ) }
-						</div>
+						</fieldset>
 						<p className="mt-1.5 text-xs text-slate-500">
 							{ __(
 								'AAA holds every derived color to 7:1. It is stricter than AA and moves brand-derived colors further from the color you picked.',
@@ -527,7 +533,7 @@ export const ColorCustomizer = ( { settings, onChange, activeTemplate } ) => {
 							{ __( 'Contrast Compliance: ', 'saasvibe' ) }
 						</strong>
 						{ __(
-							'Contrast is handled for you in every template. Text on a brand fill takes black or white by WCAG relative luminance, and the brand color used as a label or icon is lightened or darkened only as far as it must be to clear WCAG 2.1 AA (4.5:1) against the chrome behind it — so any brand color stays readable.',
+							'Contrast is handled for you in every template. Text on a brand fill takes black or white by WCAG relative luminance, and the brand color used as a label or icon is lightened or darkened only as far as it must be to clear the contrast target you set above against the chrome behind it — so any brand color stays readable.',
 							'saasvibe'
 						) }
 					</li>

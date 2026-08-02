@@ -18,15 +18,28 @@ export const TemplateSelector = ( { currentTemplate, onSelect } ) => {
 				</p>
 			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+			<div
+				role="radiogroup"
+				aria-label={ __( 'Design template', 'saasvibe' ) }
+				className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+			>
 				{ templates.map( ( template ) => {
 					const isSelected = currentTemplate === template.id;
 
 					return (
 						<div
 							key={ template.id }
+							role="radio"
+							aria-checked={ isSelected }
+							tabIndex={ 0 }
 							onClick={ () => onSelect( template.id ) }
-							className={ `relative border rounded-xl overflow-hidden cursor-pointer transition-all duration-200 bg-white group ${
+							onKeyDown={ ( e ) => {
+								if ( e.key === 'Enter' || e.key === ' ' ) {
+									e.preventDefault();
+									onSelect( template.id );
+								}
+							} }
+							className={ `relative border rounded-xl overflow-hidden cursor-pointer transition-all duration-200 bg-white group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
 								isSelected
 									? 'border-indigo-600 ring-2 ring-indigo-100 shadow-md'
 									: 'border-slate-200 hover:border-slate-300 hover:shadow-sm'

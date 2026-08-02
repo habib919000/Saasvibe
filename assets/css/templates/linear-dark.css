@@ -402,7 +402,7 @@ html.wp-toolbar {
 #adminmenu a.menu-top:focus-visible,
 #adminmenu .wp-submenu a:focus-visible,
 #collapse-button:focus-visible {
-    outline: 2px solid var(--saasvibe-brand-color, #2563EB) !important;
+    outline: 2px solid var(--saasvibe-brand-accent, #2563EB) !important;
     outline-offset: -2px !important;
     background-color: #1A1A1A !important;
 }
@@ -415,7 +415,7 @@ html.wp-toolbar {
 
 #wpadminbar .ab-item:focus-visible,
 #wpadminbar a:focus-visible {
-    outline: 2px solid var(--saasvibe-brand-color, #2563EB) !important;
+    outline: 2px solid var(--saasvibe-brand-accent, #2563EB) !important;
     outline-offset: -2px !important;
 }
 

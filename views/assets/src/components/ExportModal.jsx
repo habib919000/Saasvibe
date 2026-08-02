@@ -38,13 +38,24 @@ export const ExportModal = ( { isOpen, onClose, onImportSuccess } ) => {
 
 		const reader = new FileReader();
 		reader.onload = async ( event ) => {
+			const raw = String( event.target?.result || '' );
+
+			// Parse first, in its own guard: a malformed file is the user's to
+			// fix, while a rejected request is the server's to explain. Sharing
+			// one catch reported every 400, 403 and dropped connection as
+			// "Invalid JSON file content."
 			try {
-				const raw = String( event.target?.result || '' );
-
-				// Parse first so a malformed file fails here with a clear
-				// message rather than as a 400 from the server.
 				JSON.parse( raw );
+			} catch ( err ) {
+				setImportStatus( 'error' );
+				setErrorMessage(
+					__( 'Invalid JSON file content.', 'saasvibe' )
+				);
+				setIsImporting( false );
+				return;
+			}
 
+			try {
 				// The importer takes the raw document under `content`; posting
 				// the parsed object instead left content empty and every import
 				// failed with "No settings provided".
@@ -67,7 +78,11 @@ export const ExportModal = ( { isOpen, onClose, onImportSuccess } ) => {
 			} catch ( err ) {
 				setImportStatus( 'error' );
 				setErrorMessage(
-					__( 'Invalid JSON file content.', 'saasvibe' )
+					err?.message ||
+						__(
+							'Import failed. The server rejected the request.',
+							'saasvibe'
+						)
 				);
 			} finally {
 				setIsImporting( false );

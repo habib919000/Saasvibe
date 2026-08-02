@@ -619,7 +619,9 @@ html.wp-toolbar {
 .screen-reader-text:focus {
     background: var(--saasvibe-brand-fill, #154B75) !important;
     color: var(--saasvibe-brand-text-color, #FFFFFF) !important;
-    outline: 2px solid var(--saasvibe-brand-accent, var(--saasvibe-brand-text-color, #FFFFFF)) !important;
+outline: 2px solid var(--saasvibe-brand-text-color, #FFFFFF) !important; /* The link sits on the
+       brand fill, so the ring takes the colour derived for that fill -- the accent
+       is derived against the inverted active fill and would match this background. */
     outline-offset: 2px !important;
     text-decoration: none !important;
     clip: auto !important;
