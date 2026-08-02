@@ -80,27 +80,11 @@ html.wp-toolbar {
     transition: color 150ms ease !important;
 }
 
-/* Link height & Flex Alignment */
-#wpadminbar .ab-item,
-#wpadminbar .ab-empty-item {
-    height: var(--saasvibe-topbar-height, 46px) !important;
-    display: flex !important;
-    align-items: center !important;
+/* This template gives top-level toolbar items a wider gutter. Height and
+   centring come from the alignment section. */
+#wpadminbar #wp-toolbar > ul > li > .ab-item,
+#wpadminbar #wp-toolbar > ul > li > .ab-empty-item {
     padding: 0 12px !important;
-}
-
-#wpadminbar .ab-icon {
-    float: none !important;
-    margin: 0 6px 0 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-#wpadminbar .ab-icon::before,
-#wpadminbar .dashicons-before::before {
-    position: relative !important;
-    top: auto !important;
 }
 
 #wpadminbar .ab-label,
@@ -552,6 +536,100 @@ html.wp-toolbar {
     body.admin-bar #wpbody {
         padding-top: 46px !important;
     }
+}
+
+/* ============================================================
+ * 6b. Alignment
+ * ============================================================
+ *
+ * Core lays the toolbar and menu out with floats and fixed boxes sized for its
+ * own 32px bar and default menu density. Both are configurable here, so the
+ * geometry has to follow the setting rather than core's constants:
+ *
+ *   - Toolbar glyphs float to the top of the line box, so on a taller bar they
+ *     ride above their labels. Core also nudges them with `top: 2px`, tuned for
+ *     32px.
+ *   - The menu icon box is a fixed 34px while the label box grows and shrinks
+ *     with the density setting, so icon and label only line up at Normal.
+ *
+ * Flex centring fixes both and stays correct at any height or density. */
+
+/* Only top-level toolbar items take the bar's height -- dropdown rows keep
+   their own compact spacing. */
+#wpadminbar #wp-toolbar > ul > li > .ab-item,
+#wpadminbar #wp-toolbar > ul > li > .ab-empty-item {
+    height: var(--saasvibe-topbar-height, 46px) !important;
+    display: flex !important;
+    align-items: center !important;
+    line-height: normal !important;
+}
+
+#wpadminbar .ab-icon,
+#wpadminbar .ab-item::before,
+#wpadminbar .ab-empty-item::before {
+    float: none !important;
+    position: relative !important;
+    top: auto !important;
+    margin-block: 0 !important;
+    margin-inline: 0 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#wpadminbar .ab-label,
+#wpadminbar .ab-item .display-name {
+    line-height: normal !important;
+}
+
+/* Avatars in the account item sit on the text baseline by default. */
+#wpadminbar #wp-admin-bar-my-account img.avatar {
+    float: none !important;
+    margin: 0 0 0 6px !important;
+    margin-inline: 6px 0 !important;
+    vertical-align: middle !important;
+}
+
+/* Menu icon and label centre on each other at every density. */
+#adminmenu a.menu-top {
+    display: flex !important;
+    align-items: center !important;
+}
+
+#adminmenu div.wp-menu-image {
+    float: none !important;
+    flex: 0 0 36px !important;
+    width: 36px !important;
+    height: auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#adminmenu div.wp-menu-image::before {
+    line-height: 1 !important;
+    padding: 0 !important;
+}
+
+#adminmenu div.wp-menu-image img {
+    max-width: 20px !important;
+    height: auto !important;
+    padding: 0 !important;
+    vertical-align: middle !important;
+}
+
+#adminmenu a.menu-top div.wp-menu-name {
+    flex: 1 1 auto !important;
+}
+
+/* Folded rail: no label to sit beside, so the icon centres in the 60px rail. */
+.folded #adminmenu a.menu-top {
+    justify-content: center !important;
+}
+
+.folded #adminmenu div.wp-menu-image {
+    flex: 0 0 auto !important;
 }
 
 /* ============================================================
