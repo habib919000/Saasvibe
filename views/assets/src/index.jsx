@@ -6,9 +6,7 @@ import {
 	Palette,
 	Layers,
 	Sliders,
-	Shield,
 	FileJson,
-	FolderLock,
 	Check,
 	ChevronRight,
 	Sparkles,
@@ -87,15 +85,6 @@ const App = () => {
 		! settings.wizard_completed
 	);
 	const [ wizardStep, setWizardStep ] = useState( 1 );
-
-	// License variables
-	const [ licenseKey, setLicenseKey ] = useState(
-		window.Saasvibe_Vars?.license?.key || ''
-	);
-	const [ isActivatingLicense, setIsActivatingLicense ] = useState( false );
-	const [ isPro, setIsPro ] = useState(
-		window.Saasvibe_Vars?.is_pro || false
-	);
 
 	useEffect( () => {
 		const brandColor = safeHex(
@@ -180,46 +169,6 @@ const App = () => {
 		} finally {
 			setIsSaving( false );
 		}
-	};
-
-	const handleLicenseActivate = async ( e ) => {
-		e.preventDefault();
-		if ( ! licenseKey ) {
-			return;
-		}
-
-		setIsActivatingLicense( true );
-		// Simulate remote activation API check
-		setTimeout( () => {
-			setIsActivatingLicense( false );
-			if (
-				licenseKey.startsWith( 'PRO-' ) ||
-				licenseKey.startsWith( 'AGENCY-' )
-			) {
-				setIsPro( true );
-				if ( window.Saasvibe_Vars ) {
-					window.Saasvibe_Vars.is_pro = true;
-					if ( ! window.Saasvibe_Vars.settings ) {
-						window.Saasvibe_Vars.settings = {};
-					}
-					window.Saasvibe_Vars.settings.license_tier =
-						licenseKey.startsWith( 'AGENCY-' ) ? 'agency' : 'pro';
-				}
-				toast.success(
-					__(
-						'License activated successfully! Pro templates unlocked.',
-						'saasvibe'
-					)
-				);
-			} else {
-				toast.error(
-					__(
-						'Invalid license key format. Use keys starting with PRO- or AGENCY-.',
-						'saasvibe'
-					)
-				);
-			}
-		}, 1200 );
 	};
 
 	const handleWizardComplete = async () => {
@@ -615,11 +564,6 @@ const App = () => {
 								label: __( 'Advanced', 'saasvibe' ),
 								icon: <Sliders className="h-4 w-4" />,
 							},
-							{
-								id: 'license',
-								label: __( 'License', 'saasvibe' ),
-								icon: <Shield className="h-4 w-4" />,
-							},
 						].map( ( tab ) => (
 							<button
 								key={ tab.id }
@@ -942,113 +886,6 @@ const App = () => {
 							</div>
 						) }
 
-						{ activeTab === 'license' && (
-							<div className="p-6 space-y-6">
-								<div>
-									<h2 className="text-xl font-semibold text-slate-800 m-0">
-										{ __(
-											'Plugin License Manager',
-											'saasvibe'
-										) }
-									</h2>
-									<p className="text-sm text-slate-500 mt-1">
-										{ __(
-											'Register license keys to unlock advanced design templates and configuration transfer utilities.',
-											'saasvibe'
-										) }
-									</p>
-								</div>
-
-								<div className="border border-slate-200 rounded-xl p-6 bg-white space-y-4 max-w-xl">
-									<div className="flex items-center justify-between border-b border-slate-100 pb-4">
-										<span className="text-xs text-slate-500 font-medium">
-											{ __(
-												'Current Tier:',
-												'saasvibe'
-											) }
-										</span>
-										<span
-											className={ `text-xs px-2.5 py-1 rounded-full font-bold uppercase ${
-												isPro
-													? 'bg-indigo-100 text-indigo-700'
-													: 'bg-slate-100 text-slate-600'
-											}` }
-										>
-											{ isPro
-												? __(
-														'Pro / Agency Active',
-														'saasvibe'
-												  )
-												: __(
-														'Free Tier',
-														'saasvibe'
-												  ) }
-										</span>
-									</div>
-
-									<form
-										onSubmit={ handleLicenseActivate }
-										className="space-y-4"
-									>
-										<div className="space-y-1">
-											<label className="text-xs font-medium text-slate-500 block">
-												{ __(
-													'License Activation Key',
-													'saasvibe'
-												) }
-											</label>
-											<div className="flex items-center gap-3">
-												<input
-													type="password"
-													value={ licenseKey }
-													placeholder="PRO-XXXX-XXXX"
-													onChange={ ( e ) =>
-														setLicenseKey(
-															e.target.value
-														)
-													}
-													className="border border-slate-200 rounded px-3 py-2 text-sm w-72 focus:outline-none focus:border-indigo-500"
-												/>
-												<button
-													type="submit"
-													disabled={
-														isActivatingLicense ||
-														! licenseKey
-													}
-													className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50"
-												>
-													{ isActivatingLicense ? (
-														<Loader2 className="h-4 w-4 animate-spin" />
-													) : null }
-													{ __(
-														'Activate',
-														'saasvibe'
-													) }
-												</button>
-											</div>
-										</div>
-									</form>
-
-									{ ! isPro && (
-										<div className="p-4 bg-slate-50 rounded-xl flex items-start gap-2.5 text-slate-600 text-xs mt-4">
-											<FolderLock className="h-5 w-5 text-indigo-600 shrink-0" />
-											<div>
-												<span className="font-semibold text-slate-800 block mb-0.5">
-													{ __(
-														'Demo Key Notice',
-														'saasvibe'
-													) }
-												</span>
-												{ __(
-													'Enter a demo license key starting with "PRO-" (e.g. PRO-DEMO) or "AGENCY-" (e.g. AGENCY-DEMO) to test the Pro templates and Agency migration tools.',
-													'saasvibe'
-												) }
-											</div>
-										</div>
-									) }
-								</div>
-							</div>
-						) }
 					</div>
 				</div>
 

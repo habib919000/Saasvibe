@@ -175,6 +175,9 @@ Yes. Visit our documentation at https://github.com/habib919000/Saasvibe for guid
 * Mid-tone brand colours (around #767676), where neither black nor white can clear AA, now nudge the fill itself clear of that band instead of shipping unreadable text.
 * New contrast target setting: AA (4.5:1, default) or AAA (7:1).
 
+**Removed:**
+* The License tab, which activated nothing and gated export/import behind a tier flag the plugin never set. Export and import are now available to any user who can manage options.
+
 **Fixed:**
 * Import never worked — the settings modal posted the parsed object instead of the raw document, so every import failed with "No settings provided".
 * A non-JSON request body raised an uncaught fatal in the save and import endpoints instead of returning a 400.

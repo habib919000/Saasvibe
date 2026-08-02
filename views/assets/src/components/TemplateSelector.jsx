@@ -1,9 +1,8 @@
 import { __ } from '@wordpress/i18n';
-import { Lock, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 export const TemplateSelector = ( { currentTemplate, onSelect } ) => {
 	const templates = window.Saasvibe_Vars?.templates || [];
-	const isPro = window.Saasvibe_Vars?.is_pro || false;
 
 	return (
 		<div className="saasvibe-template-selector p-6">
@@ -21,29 +20,17 @@ export const TemplateSelector = ( { currentTemplate, onSelect } ) => {
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{ templates.map( ( template ) => {
-					const isLocked = template.tier === 'pro' && ! isPro;
 					const isSelected = currentTemplate === template.id;
 
 					return (
 						<div
 							key={ template.id }
-							onClick={ () => {
-								if ( isLocked ) {
-									alert(
-										__(
-											'This template requires a Pro License.',
-											'saasvibe'
-										)
-									);
-									return;
-								}
-								onSelect( template.id );
-							} }
+							onClick={ () => onSelect( template.id ) }
 							className={ `relative border rounded-xl overflow-hidden cursor-pointer transition-all duration-200 bg-white group ${
 								isSelected
 									? 'border-indigo-600 ring-2 ring-indigo-100 shadow-md'
 									: 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
-							} ${ isLocked ? 'opacity-80' : '' }` }
+							}` }
 						>
 							{ /* Template Preview Mockup Area */ }
 							<div className="h-32 bg-slate-50 flex items-center justify-center relative border-b border-slate-100">
@@ -94,14 +81,6 @@ export const TemplateSelector = ( { currentTemplate, onSelect } ) => {
 									</div>
 								) }
 
-								{ isLocked && (
-									<div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[1px] flex items-center justify-center">
-										<div className="bg-white/90 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-semibold text-slate-700">
-											<Lock className="h-3.5 w-3.5 text-indigo-600" />
-											{ __( 'PRO ONLY', 'saasvibe' ) }
-										</div>
-									</div>
-								) }
 							</div>
 
 							{ /* Template Meta Info */ }
